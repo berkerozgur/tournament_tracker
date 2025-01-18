@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'views/tournament_viewer.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -30,11 +32,7 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
-      ),
+      home: TournamentViewer(),
     );
   }
 }

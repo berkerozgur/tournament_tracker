@@ -16,12 +16,12 @@ class _TournamentViewerState extends State<TournamentViewer> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text('Tournament name will be shown here'),
       ),
-      body: const Padding(
-        padding: EdgeInsets.all(8.0),
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            DropdownMenu(
+            const DropdownMenu(
               dropdownMenuEntries: [
                 DropdownMenuEntry<String>(
                   value: 'foo',
@@ -31,8 +31,29 @@ class _TournamentViewerState extends State<TournamentViewer> {
               label: Text('Round'),
               width: 136.6,
             ),
-            SizedBox(height: 13.6),
-            LabeledCheckbox(label: 'Unplayed only')
+            const SizedBox(height: 13.6),
+            const LabeledCheckbox(label: 'Unplayed only'),
+            const SizedBox(height: 13.6),
+            Expanded(
+              child: SizedBox(
+                width: MediaQuery.of(context).size.width * 0.5,
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.black),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: ListView.builder(
+                    itemCount: 1,
+                    itemBuilder: (context, index) {
+                      return const ListTile(
+                        title: Text('title'),
+                        subtitle: Text('subtitle'),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            )
           ],
         ),
       ),

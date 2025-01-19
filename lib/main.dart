@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'views/create_team.dart';
 import 'views/create_tournament.dart';
 import 'views/tournament_viewer.dart';
 
@@ -73,6 +74,17 @@ class InitialView extends StatelessWidget {
               );
             },
             child: const Text('Create Tournament'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const CreateTeam(),
+                ),
+              );
+            },
+            child: const Text('Create Team'),
           ),
         ],
       ),

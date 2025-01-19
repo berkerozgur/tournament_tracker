@@ -103,7 +103,7 @@ class BorderedListView extends StatelessWidget {
       width: MediaQuery.of(context).size.width * 0.3,
       child: Container(
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.black),
+          border: Border.all(color: Theme.of(context).colorScheme.outline),
           borderRadius: BorderRadius.circular(4),
         ),
         child: ListView.builder(

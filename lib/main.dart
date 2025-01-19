@@ -31,8 +31,39 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: TournamentViewer(),
+    return MaterialApp(
+      themeMode: ThemeMode.dark,
+      darkTheme: ThemeData.dark(),
+      home: const InitialView(),
+    );
+  }
+}
+
+class InitialView extends StatelessWidget {
+  const InitialView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: const Text('Initial View'),
+      ),
+      body: Column(
+        children: [
+          TextButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const TournamentViewer(),
+                ),
+              );
+            },
+            child: const Text('Tournament Viewer'),
+          )
+        ],
+      ),
     );
   }
 }

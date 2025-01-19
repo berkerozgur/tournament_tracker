@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+
+import '../widgets/bordered_list_view.dart';
+import '../widgets/custom_text_form_field.dart';
 
 class TournamentViewer extends StatefulWidget {
   const TournamentViewer({super.key});
@@ -44,12 +46,12 @@ class _TournamentViewerState extends State<TournamentViewer> {
                 children: [
                   const SizedBox(
                     width: 136.6 * 2,
-                    child: ScoreField(label: 'Team one score'),
+                    child: CustomTextFormField(label: 'Team one score'),
                   ),
                   const SizedBox(height: 13.6),
                   const SizedBox(
                     width: 136.6 * 2,
-                    child: ScoreField(label: 'Team two score'),
+                    child: CustomTextFormField(label: 'Team two score'),
                   ),
                   const SizedBox(height: 13.6),
                   SizedBox(
@@ -63,57 +65,6 @@ class _TournamentViewerState extends State<TournamentViewer> {
               ),
             )
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class ScoreField extends StatelessWidget {
-  final String label;
-
-  const ScoreField({
-    super.key,
-    required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      decoration: InputDecoration(
-        label: Text(label),
-        border: const OutlineInputBorder(),
-      ),
-      inputFormatters: [
-        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*$')),
-      ],
-      keyboardType: TextInputType.number,
-    );
-  }
-}
-
-class BorderedListView extends StatelessWidget {
-  const BorderedListView({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: MediaQuery.of(context).size.width * 0.3,
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: Theme.of(context).colorScheme.outline),
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child: ListView.builder(
-          itemCount: 1,
-          itemBuilder: (context, index) {
-            return const ListTile(
-              title: Text('title'),
-              subtitle: Text('subtitle'),
-            );
-          },
         ),
       ),
     );

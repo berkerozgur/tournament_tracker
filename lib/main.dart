@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'views/create_tournament.dart';
 import 'views/tournament_viewer.dart';
 
 void main() async {
@@ -61,7 +62,18 @@ class InitialView extends StatelessWidget {
               );
             },
             child: const Text('Tournament Viewer'),
-          )
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const CreateTournament(),
+                ),
+              );
+            },
+            child: const Text('Create Tournament'),
+          ),
         ],
       ),
     );

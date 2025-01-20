@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:tournament_tracker/global_config.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'views/create_prize.dart';
@@ -11,6 +12,8 @@ import 'views/tournament_viewer.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  GlobalConfig.initConnections(false, true);
 
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     await windowManager.ensureInitialized();

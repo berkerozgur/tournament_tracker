@@ -1,9 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:tournament_tracker/global_config.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'global_config.dart';
 import 'views/create_prize.dart';
 import 'views/create_team.dart';
 import 'views/create_tournament.dart';
@@ -96,7 +96,7 @@ class InitialView extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const CreatePrize(),
+                  builder: (context) => CreatePrize(),
                 ),
               );
             },

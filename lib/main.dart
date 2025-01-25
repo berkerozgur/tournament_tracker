@@ -13,7 +13,7 @@ import 'views/tournament_viewer.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  GlobalConfig.initConnections(false, true);
+  GlobalConfig.initConnection(DbType.textFile);
 
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     await windowManager.ensureInitialized();
@@ -96,7 +96,7 @@ class InitialView extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => CreatePrize(),
+                  builder: (context) => const CreatePrize(),
                 ),
               );
             },

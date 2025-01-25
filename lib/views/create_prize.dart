@@ -185,12 +185,10 @@ class _CreatePrizeState extends State<CreatePrize> {
                         placeName: _placeName.text,
                         placeNumber: _placeNumber.text,
                       );
-                      for (var db in GlobalConfig.connections) {
-                        final createdPrize = db.createPrize(prize);
-                        prize = createdPrize;
-                      }
+                      final createdPrize =
+                          GlobalConfig.connection?.createPrize(prize);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Prize: $prize')),
+                        SnackBar(content: Text('Prize: $createdPrize')),
                       );
                       log(prize.toString());
                       _amount.clear();

@@ -40,7 +40,7 @@ class Prize {
     required String percentage,
     required this.placeName,
     required String placeNumber,
-  })  : amount = Decimal.tryParse(amount) ?? Decimal.zero,
+  })  : amount = Decimal.tryParse(amount),
         percentage = double.tryParse(percentage),
         placeNumber = int.tryParse(placeNumber) ?? -1;
 

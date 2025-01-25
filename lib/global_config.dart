@@ -1,20 +1,21 @@
-import 'data_connection.dart';
-import 'text_connection.dart';
+import 'data_access/data_connection.dart';
+import 'data_access/text_connection.dart';
+
+enum DbType { sqlite, textFile }
 
 class GlobalConfig {
   GlobalConfig._();
 
-  static final List<DataConnection> _connections = [];
-  static List<DataConnection> get connections => _connections;
+  static DataConnection? _connection;
+  static DataConnection? get connection => _connection;
 
-  static void initConnections(bool database, bool textFile) {
-    if (database) {
-      // TODO: Create sqlite connection
-    }
-
-    if (textFile) {
-      // TODO: Create text file connection
-      _connections.add(TextConnection());
+  static void initConnection(DbType dbType) {
+    switch (dbType) {
+      case DbType.sqlite:
+        // TODO: sqlite will be implemented at some point
+        throw UnimplementedError();
+      case DbType.textFile:
+        _connection = TextConnection();
     }
   }
 }

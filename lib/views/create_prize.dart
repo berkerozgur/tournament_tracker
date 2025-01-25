@@ -1,9 +1,13 @@
+import 'dart:developer';
+
 import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 
+import '../global_config.dart';
+import '../models/prize.dart';
+
 enum PrizeType { amount, percentage }
 
-// TODO: add validation for the rest of the textformfields
 class CreatePrize extends StatefulWidget {
   const CreatePrize({super.key});
 
@@ -14,8 +18,10 @@ class CreatePrize extends StatefulWidget {
 class _CreatePrizeState extends State<CreatePrize> {
   var _groupValue = PrizeType.amount;
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _amountController;
-  late final TextEditingController _percentageController;
+  late final TextEditingController _amount;
+  late final TextEditingController _percentage;
+  late final TextEditingController _placeName;
+  late final TextEditingController _placeNumber;
 
   bool _isAmountEnabled() => _groupValue == PrizeType.amount;
   bool _isPercentageEnabled() => _groupValue == PrizeType.percentage;
@@ -23,14 +29,18 @@ class _CreatePrizeState extends State<CreatePrize> {
   @override
   void initState() {
     super.initState();
-    _amountController = TextEditingController();
-    _percentageController = TextEditingController();
+    _amount = TextEditingController();
+    _percentage = TextEditingController();
+    _placeName = TextEditingController(text: 'first');
+    _placeNumber = TextEditingController(text: '1');
   }
 
   @override
   void dispose() {
-    _amountController.dispose();
-    _percentageController.dispose();
+    _amount.dispose();
+    _percentage.dispose();
+    _placeName.dispose();
+    _placeNumber.dispose();
     super.dispose();
   }
 
@@ -50,6 +60,7 @@ class _CreatePrizeState extends State<CreatePrize> {
             child: Column(
               children: [
                 TextFormField(
+                  controller: _placeNumber,
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                     label: Text('Place number'),
@@ -70,6 +81,7 @@ class _CreatePrizeState extends State<CreatePrize> {
                   height: 13.6,
                 ),
                 TextFormField(
+                  controller: _placeName,
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                     label: Text('Place name'),
@@ -77,7 +89,7 @@ class _CreatePrizeState extends State<CreatePrize> {
                   validator: (value) {
                     if (value != null) {
                       if (value.isEmpty) {
-                        return 'Please enter your team name';
+                        return 'Please enter place name';
                       }
                     }
                     return null;
@@ -86,25 +98,28 @@ class _CreatePrizeState extends State<CreatePrize> {
                 const SizedBox(
                   height: 13.6,
                 ),
-                // TODO: remove error message on change if possible
                 RadioListTile(
                   value: PrizeType.amount,
                   groupValue: _groupValue,
                   onChanged: (value) {
                     setState(() {
                       _groupValue = value!;
-                      _amountController.clear();
-                      _percentageController.clear();
+                      _amount.clear();
+                      _percentage.clear();
+                      // Reset form to clear error messages
+                      _formKey.currentState?.reset();
                     });
                   },
                   title: TextFormField(
-                    controller: _amountController,
+                    controller: _amount,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       label: Text('Prize amount'),
                     ),
                     enabled: _isAmountEnabled(),
                     validator: (value) {
+                      // part of the error clearing
+                      if (!_isAmountEnabled()) return null;
                       if (value != null) {
                         if (_isPercentageEnabled()) {
                           return null;
@@ -126,25 +141,29 @@ class _CreatePrizeState extends State<CreatePrize> {
                   onChanged: (value) {
                     setState(() {
                       _groupValue = value!;
-                      _amountController.clear();
-                      _percentageController.clear();
+                      _amount.clear();
+                      _percentage.clear();
+                      // Reset form to clear error messages
+                      _formKey.currentState?.reset();
                     });
                   },
                   title: TextFormField(
-                    controller: _percentageController,
+                    controller: _percentage,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       label: Text('Prize percentage'),
                     ),
                     enabled: _isPercentageEnabled(),
                     validator: (value) {
+                      // part of the error clearing
+                      if (!_isPercentageEnabled()) return null;
                       if (value != null) {
                         if (_isAmountEnabled()) {
                           return null;
                         }
-                        final prizePercentage = int.tryParse(value);
+                        final prizePercentage = double.tryParse(value);
                         if (prizePercentage == null) {
-                          return 'Please enter an integer number';
+                          return 'Please enter a decimal number';
                         } else if (prizePercentage < 0 ||
                             prizePercentage > 100) {
                           return 'Percentage has to be between 0 and 100';
@@ -160,11 +179,24 @@ class _CreatePrizeState extends State<CreatePrize> {
                 FilledButton(
                   onPressed: () {
                     if (_formKey.currentState?.validate() ?? false) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('This form is valid'),
-                        ),
+                      var prize = Prize.fromStrings(
+                        amount: _amount.text,
+                        percentage: _percentage.text,
+                        placeName: _placeName.text,
+                        placeNumber: _placeNumber.text,
                       );
+                      for (var db in GlobalConfig.connections) {
+                        final createdPrize = db.createPrize(prize);
+                        prize = createdPrize;
+                      }
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Prize: $prize')),
+                      );
+                      log(prize.toString());
+                      _amount.clear();
+                      _percentage.clear();
+                      _placeName.clear();
+                      _placeNumber.clear();
                     }
                   },
                   child: const Text('Create prize'),

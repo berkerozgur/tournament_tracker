@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'data_access/text_connection_helper.dart';
 import 'global_config.dart';
 import 'views/create_prize.dart';
 import 'views/create_team.dart';
@@ -13,6 +14,9 @@ import 'views/tournament_viewer.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // create text data directory
+  TextConnectionHelper.createDirectory();
+  // init db connection
   GlobalConfig.initConnection(DbType.textFile);
 
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {

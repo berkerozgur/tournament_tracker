@@ -11,5 +11,5 @@ abstract class DataConnection {
   /// Takes a [Prize] object and persists it to the underlying storage system.
   /// Returns the created [Prize], which may include additional data or modifications
   /// made during the storage process.
-  Prize createPrize(Prize prize);
+  Future<Prize> createPrize(Prize prize);
 }

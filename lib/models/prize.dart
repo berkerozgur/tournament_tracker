@@ -1,5 +1,4 @@
 import 'package:decimal/decimal.dart' show Decimal;
-// import 'package:flutter/material.dart';
 
 /// Represents a prize in a competition or contest.
 ///
@@ -8,7 +7,7 @@ import 'package:decimal/decimal.dart' show Decimal;
 // @immutable
 class Prize {
   /// Unique identifier for the prize.
-  int? id;
+  int id;
 
   /// The monetary value of the prize, stored as a [Decimal] for precise calculations.
   Decimal? amount;
@@ -36,11 +35,13 @@ class Prize {
   });
 
   Prize.fromStrings({
+    required String id,
     required String amount,
     required String percentage,
     required this.placeName,
     required String placeNumber,
-  })  : amount = Decimal.tryParse(amount),
+  })  : id = int.tryParse(id) ?? -1,
+        amount = Decimal.tryParse(amount),
         percentage = double.tryParse(percentage),
         placeNumber = int.tryParse(placeNumber) ?? -1;
 

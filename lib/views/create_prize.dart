@@ -31,8 +31,8 @@ class _CreatePrizeState extends State<CreatePrize> {
     super.initState();
     _amount = TextEditingController();
     _percentage = TextEditingController();
-    _placeName = TextEditingController(text: 'first');
-    _placeNumber = TextEditingController(text: '1');
+    _placeName = TextEditingController();
+    _placeNumber = TextEditingController();
   }
 
   @override
@@ -106,8 +106,8 @@ class _CreatePrizeState extends State<CreatePrize> {
                       _groupValue = value!;
                       _amount.clear();
                       _percentage.clear();
-                      // Reset form to clear error messages
-                      _formKey.currentState?.reset();
+                      // Focus then unfocus to clear error messages
+                      FocusScope.of(context).requestFocus(FocusNode());
                     });
                   },
                   title: TextFormField(
@@ -118,7 +118,6 @@ class _CreatePrizeState extends State<CreatePrize> {
                     ),
                     enabled: _isAmountEnabled(),
                     validator: (value) {
-                      // part of the error clearing
                       if (!_isAmountEnabled()) return null;
                       if (value != null) {
                         if (_isPercentageEnabled()) {
@@ -143,8 +142,8 @@ class _CreatePrizeState extends State<CreatePrize> {
                       _groupValue = value!;
                       _amount.clear();
                       _percentage.clear();
-                      // Reset form to clear error messages
-                      _formKey.currentState?.reset();
+                      // Focus then unfocus to clear error messages
+                      FocusScope.of(context).requestFocus(FocusNode());
                     });
                   },
                   title: TextFormField(
@@ -155,7 +154,6 @@ class _CreatePrizeState extends State<CreatePrize> {
                     ),
                     enabled: _isPercentageEnabled(),
                     validator: (value) {
-                      // part of the error clearing
                       if (!_isPercentageEnabled()) return null;
                       if (value != null) {
                         if (_isAmountEnabled()) {
@@ -177,19 +175,24 @@ class _CreatePrizeState extends State<CreatePrize> {
                   height: 13.6,
                 ),
                 FilledButton(
-                  onPressed: () {
+                  onPressed: () async {
+                    final scaffoldMessenger = ScaffoldMessenger.of(context);
                     if (_formKey.currentState?.validate() ?? false) {
                       var prize = Prize.fromStrings(
+                        id: '-1',
                         amount: _amount.text,
                         percentage: _percentage.text,
                         placeName: _placeName.text,
                         placeNumber: _placeNumber.text,
                       );
                       final createdPrize =
-                          GlobalConfig.connection?.createPrize(prize);
-                      ScaffoldMessenger.of(context).showSnackBar(
+                          await GlobalConfig.connection?.createPrize(prize);
+                      if (!mounted) return;
+
+                      scaffoldMessenger.showSnackBar(
                         SnackBar(content: Text('Prize: $createdPrize')),
                       );
+
                       log(prize.toString());
                       _amount.clear();
                       _percentage.clear();

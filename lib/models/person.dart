@@ -13,6 +13,10 @@ class Person {
   /// First/given name of the person
   final String firstName;
 
+  /// Returns the full name of the person by concatenating the first name
+  /// and last name.
+  String get fullName => '$firstName $lastName';
+
   /// Last/family name of the person
   final String lastName;
 

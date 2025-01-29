@@ -5,7 +5,7 @@ enum DbType { sqlite, textFile }
 
 class GlobalConfig {
   GlobalConfig._();
-
+  // TODO: i init connection in main function. it feels like this connection shouldn't be nullable
   static DataConnection? _connection;
   static DataConnection? get connection => _connection;
 

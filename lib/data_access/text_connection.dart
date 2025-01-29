@@ -52,4 +52,11 @@ class TextConnection extends DataConnection {
 
     return person;
   }
+
+  @override
+  Future<List<Person>> getAllPeople() async {
+    final filePath = await TextConnectionHelper.getFilePath(_PEOPLE_FILE);
+    final lines = await TextConnectionHelper.readLines(filePath);
+    return TextConnectionHelper.convertToPeople(lines);
+  }
 }

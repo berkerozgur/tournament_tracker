@@ -6,8 +6,58 @@ import '../global_config.dart';
 import '../models/person.dart';
 import '../widgets/bordered_list_view.dart';
 
-class CreateTeam extends StatelessWidget {
+class CreateTeam extends StatefulWidget {
   const CreateTeam({super.key});
+
+  @override
+  State<CreateTeam> createState() => _CreateTeamState();
+}
+
+class _CreateTeamState extends State<CreateTeam> {
+  var _availableMembers = <Person>[];
+  final _selectedMembers = <Person>[];
+  Person? _selectedMember;
+  void _getAllPeople() async {
+    _availableMembers = await GlobalConfig.connection!.getAllPeople();
+  }
+
+  void _createSampleData() {
+    _availableMembers.add(Person(
+      id: -1,
+      emailAddress: 'emailAddress',
+      firstName: 'John',
+      lastName: 'Doe',
+      phoneNumber: 'phoneNumber',
+    ));
+    _availableMembers.add(Person(
+      id: -1,
+      emailAddress: 'emailAddress',
+      firstName: 'Jane',
+      lastName: 'Doe',
+      phoneNumber: 'phoneNumber',
+    ));
+    _selectedMembers.add(Person(
+      id: -1,
+      emailAddress: 'emailAddress',
+      firstName: 'Jesse',
+      lastName: 'Pinkman',
+      phoneNumber: 'phoneNumber',
+    ));
+    _selectedMembers.add(Person(
+      id: -1,
+      emailAddress: 'emailAddress',
+      firstName: 'Walter',
+      lastName: 'White',
+      phoneNumber: 'phoneNumber',
+    ));
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _createSampleData();
+    // _getAllPeople();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +67,7 @@ class CreateTeam extends StatelessWidget {
         title: const Text('Create Team'),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             Expanded(
@@ -33,20 +83,40 @@ class CreateTeam extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 13.6),
-                        const DropdownMenu(
-                          dropdownMenuEntries: [
-                            DropdownMenuEntry<String>(
-                              value: 'foo',
-                              label: 'foo',
+                        Row(
+                          children: [
+                            DropdownMenu(
+                              key: ValueKey(_availableMembers.length),
+                              dropdownMenuEntries: _availableMembers
+                                  .map(
+                                    (person) => DropdownMenuEntry<Person>(
+                                      value: person,
+                                      label: person.fullName,
+                                    ),
+                                  )
+                                  .toList(),
+                              label: const Text('Select team member'),
+                              onSelected: (value) {
+                                setState(() {
+                                  _selectedMember = value;
+                                });
+                              },
+                              width: 136.6 * 2,
+                            ),
+                            const SizedBox(width: 13.6),
+                            FilledButton(
+                              onPressed: () {
+                                if (_selectedMember != null) {
+                                  setState(() {
+                                    _availableMembers.remove(_selectedMember);
+                                    _selectedMembers.add(_selectedMember!);
+                                    _selectedMember = null;
+                                  });
+                                }
+                              },
+                              child: const Text('Add member'),
                             ),
                           ],
-                          label: Text('Select team member'),
-                          width: 136.6,
-                        ),
-                        const SizedBox(height: 13.6),
-                        FilledButton(
-                          onPressed: () {},
-                          child: const Text('Add member'),
                         ),
                         const SizedBox(height: 13.6),
                         const AddNewMemberContainer()
@@ -65,7 +135,9 @@ class CreateTeam extends StatelessWidget {
                         Expanded(
                           child: Row(
                             children: [
-                              const BorderedListView(),
+                              BorderedListView(
+                                selectedMembers: _selectedMembers,
+                              ),
                               const SizedBox(width: 13.6),
                               FilledButton(
                                 onPressed: () {},
@@ -76,7 +148,7 @@ class CreateTeam extends StatelessWidget {
                         ),
                       ],
                     ),
-                  )
+                  ),
                 ],
               ),
             ),

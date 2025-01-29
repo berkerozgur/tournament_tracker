@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import '../models/person.dart';
 
+// TODO: somehow i should be able to pass List<T>
 class BorderedListView extends StatelessWidget {
+  final List<Person>? selectedMembers;
   const BorderedListView({
     super.key,
+    this.selectedMembers,
   });
 
   @override
@@ -15,11 +19,11 @@ class BorderedListView extends StatelessWidget {
           borderRadius: BorderRadius.circular(4),
         ),
         child: ListView.builder(
-          itemCount: 1,
+          itemCount: selectedMembers!.length,
           itemBuilder: (context, index) {
-            return const ListTile(
-              title: Text('title'),
-              subtitle: Text('subtitle'),
+            final member = selectedMembers![index];
+            return ListTile(
+              title: Text(member.fullName),
             );
           },
         ),

@@ -4,9 +4,10 @@ import 'package:decimal/decimal.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart' as path_provider;
 
+import '../models/person.dart';
 import '../models/prize.dart';
 
-// Convert this class to a String extension
+// TODO: Convert this class to a String extension
 class TextConnectionHelper {
   TextConnectionHelper._();
 
@@ -34,6 +35,7 @@ class TextConnectionHelper {
     return lines;
   }
 
+  // TODO: converting can be generic
   static List<Prize> convertToPrizes(List<String> lines) {
     final prizes = List<Prize>.empty(growable: true);
     for (var line in lines) {
@@ -50,6 +52,23 @@ class TextConnectionHelper {
     return prizes;
   }
 
+  static List<Person> convertToPeople(List<String> lines) {
+    final people = List<Person>.empty(growable: true);
+    for (var line in lines) {
+      final cols = line.split(',');
+      final person = Person(
+        id: int.parse(cols[0]),
+        emailAddress: cols[3],
+        firstName: cols[1],
+        lastName: cols[2],
+        phoneNumber: cols[4],
+      );
+      people.add(person);
+    }
+    return people;
+  }
+
+  // TODO: writing to files can be generic
   static Future<void> writeToPrizesFile(
     List<Prize> prizes,
     String fileName,
@@ -64,6 +83,26 @@ class TextConnectionHelper {
     var prizesFile = File(await getFilePath(fileName));
     // file will be overwritten
     var sink = prizesFile.openWrite();
+    for (var line in lines) {
+      sink.writeln(line);
+    }
+    await sink.flush();
+    await sink.close();
+  }
+
+  static Future<void> writeToPeopleFile(
+    List<Person> people,
+    String fileName,
+  ) async {
+    final lines = List<String>.empty(growable: true);
+    for (var person in people) {
+      lines.add('${person.id},${person.firstName},${person.lastName},'
+          '${person.emailAddress},${person.phoneNumber}');
+    }
+
+    var peopleFile = File(await getFilePath(fileName));
+    // file will be overwritten
+    var sink = peopleFile.openWrite();
     for (var line in lines) {
       sink.writeln(line);
     }

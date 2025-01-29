@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
-
 /// Represents a person in the tournament tracking system with their contact details.
 ///
 /// This immutable class stores basic personal information and contact details
 /// for tournament participants, organizers, or other system users.
-@immutable
 class Person {
+  /// Unique identifier for the person.
+  int id;
+
   /// Email address of the person
   /// Should be a valid email format
   final String emailAddress;
@@ -20,10 +20,17 @@ class Person {
   /// Should include country code and be properly formatted
   final String phoneNumber;
 
-  const Person({
+  Person({
+    required this.id,
     required this.emailAddress,
     required this.firstName,
     required this.lastName,
     required this.phoneNumber,
   });
+
+  @override
+  String toString() {
+    return 'Person(id: $id, firstName: $firstName, lastName: $lastName, '
+        'emailAddress: $emailAddress, phoneNumber: $phoneNumber)';
+  }
 }

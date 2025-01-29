@@ -1,4 +1,4 @@
-import 'dart:developer';
+import 'dart:developer' as dev;
 
 import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
@@ -176,8 +176,8 @@ class _CreatePrizeState extends State<CreatePrize> {
                 ),
                 FilledButton(
                   onPressed: () async {
-                    final scaffoldMessenger = ScaffoldMessenger.of(context);
                     if (_formKey.currentState?.validate() ?? false) {
+                      final scaffoldMessenger = ScaffoldMessenger.of(context);
                       var prize = Prize.fromStrings(
                         id: '-1',
                         amount: _amount.text,
@@ -193,7 +193,7 @@ class _CreatePrizeState extends State<CreatePrize> {
                         SnackBar(content: Text('Prize: $createdPrize')),
                       );
 
-                      log(prize.toString());
+                      dev.log(prize.toString());
                       _amount.clear();
                       _percentage.clear();
                       _placeName.clear();

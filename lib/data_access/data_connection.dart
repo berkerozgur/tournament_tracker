@@ -1,4 +1,5 @@
-import 'package:tournament_tracker/models/prize.dart';
+import '../models/person.dart';
+import '../models/prize.dart';
 
 /// Abstract class representing a connection to a data source for managing prize data.
 ///
@@ -12,4 +13,5 @@ abstract class DataConnection {
   /// Returns the created [Prize], which may include additional data or modifications
   /// made during the storage process.
   Future<Prize> createPrize(Prize prize);
+  Future<Person> createPerson(Person person);
 }

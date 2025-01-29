@@ -4,7 +4,6 @@ import 'package:decimal/decimal.dart' show Decimal;
 ///
 /// This immutable class holds information about a specific prize, including its
 /// monetary value, percentage of total prize pool, placement name, and numerical position.
-// @immutable
 class Prize {
   /// Unique identifier for the prize.
   int id;

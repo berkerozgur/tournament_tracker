@@ -17,6 +17,7 @@ class _CreateTeamState extends State<CreateTeam> {
   var _availableMembers = <Person>[];
   final _selectedMembers = <Person>[];
   Person? _selectedMember;
+  // TODO: how to get async data and init as a class field?
   void _getAllPeople() async {
     _availableMembers = await GlobalConfig.connection!.getAllPeople();
   }
@@ -136,12 +137,26 @@ class _CreateTeamState extends State<CreateTeam> {
                           child: Row(
                             children: [
                               BorderedListView(
+                                onMemberSelected: (member) {
+                                  setState(() {
+                                    _selectedMember = member;
+                                  });
+                                },
                                 selectedMembers: _selectedMembers,
+                                selectedMember: _selectedMember,
                               ),
                               const SizedBox(width: 13.6),
                               FilledButton(
-                                onPressed: () {},
-                                child: const Text('Delete selected'),
+                                onPressed: () {
+                                  if (_selectedMember != null) {
+                                    setState(() {
+                                      _selectedMembers.remove(_selectedMember);
+                                      _availableMembers.add(_selectedMember!);
+                                      _selectedMember = null;
+                                    });
+                                  }
+                                },
+                                child: const Text('Remove selected'),
                               ),
                             ],
                           ),

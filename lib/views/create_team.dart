@@ -120,7 +120,13 @@ class _CreateTeamState extends State<CreateTeam> {
                           ],
                         ),
                         const SizedBox(height: 13.6),
-                        const AddNewMemberContainer()
+                        AddNewMemberContainer(
+                            selectedMembers: _selectedMembers,
+                            onMemberAdded: (person) {
+                              setState(() {
+                                _selectedMembers.add(person);
+                              });
+                            })
                       ],
                     ),
                   ),
@@ -181,8 +187,13 @@ class _CreateTeamState extends State<CreateTeam> {
 
 // TODO: triggering all errors cause pixel overflow, fix it somehow
 class AddNewMemberContainer extends StatefulWidget {
+  final List<Person> selectedMembers;
+  final void Function(Person person) onMemberAdded;
+
   const AddNewMemberContainer({
     super.key,
+    required this.selectedMembers,
+    required this.onMemberAdded,
   });
 
   @override
@@ -314,15 +325,18 @@ class _AddNewMemberContainerState extends State<AddNewMemberContainer> {
                         lastName: _lastName.text,
                         phoneNumber: _phoneNumber.text,
                       );
+
                       final createdPerson =
                           await GlobalConfig.connection?.createPerson(person);
-                      if (!mounted) return;
 
+                      if (!mounted) return;
                       scaffoldMessenger.showSnackBar(
                         SnackBar(content: Text('Person: $createdPerson')),
                       );
 
+                      widget.onMemberAdded(createdPerson!);
                       dev.log(createdPerson.toString());
+
                       _email.clear();
                       _firstName.clear();
                       _lastName.clear();

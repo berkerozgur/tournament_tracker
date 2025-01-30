@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/person.dart';
 
 // TODO: somehow i should be able to pass List<T>
-class BorderedListView extends StatefulWidget {
+class BorderedListView extends StatelessWidget {
   final List<Person>? selectedMembers;
   final Person? selectedMember;
   final void Function(Person member)? onMemberSelected;
@@ -15,11 +15,6 @@ class BorderedListView extends StatefulWidget {
   });
 
   @override
-  State<BorderedListView> createState() => _BorderedListViewState();
-}
-
-class _BorderedListViewState extends State<BorderedListView> {
-  @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: MediaQuery.of(context).size.width * 0.3,
@@ -29,16 +24,14 @@ class _BorderedListViewState extends State<BorderedListView> {
           borderRadius: BorderRadius.circular(4),
         ),
         child: ListView.builder(
-          itemCount: widget.selectedMembers!.length,
+          itemCount: selectedMembers?.length ?? 0,
           itemBuilder: (context, index) {
-            final member = widget.selectedMembers![index];
+            final member = selectedMembers![index];
             return ListTile(
               onTap: () {
-                if (widget.onMemberSelected != null) {
-                  widget.onMemberSelected!(member);
-                }
+                onMemberSelected?.call(member);
               },
-              selected: widget.selectedMember == member,
+              selected: selectedMember == member,
               title: Text(member.fullName),
             );
           },

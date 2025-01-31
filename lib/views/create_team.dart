@@ -28,7 +28,6 @@ class _CreateTeamState extends State<CreateTeam> {
   @override
   void initState() {
     super.initState();
-    // _createSampleData();
     _getAllPeople();
   }
 
@@ -56,40 +55,23 @@ class _CreateTeamState extends State<CreateTeam> {
                           ),
                         ),
                         const SizedBox(height: 13.6),
-                        Row(
-                          children: [
-                            DropdownMenu(
-                              key: ValueKey(_availableMembers.length),
-                              dropdownMenuEntries: _availableMembers
-                                  .map(
-                                    (person) => DropdownMenuEntry<Person>(
-                                      value: person,
-                                      label: person.fullName,
-                                    ),
-                                  )
-                                  .toList(),
-                              label: const Text('Select team member'),
-                              onSelected: (value) {
-                                setState(() {
-                                  _selectedMember = value;
-                                });
-                              },
-                              width: 136.6 * 2,
-                            ),
-                            const SizedBox(width: 13.6),
-                            FilledButton(
-                              onPressed: () {
-                                if (_selectedMember != null) {
-                                  setState(() {
-                                    _availableMembers.remove(_selectedMember);
-                                    _selectedMembers.add(_selectedMember!);
-                                    _selectedMember = null;
-                                  });
-                                }
-                              },
-                              child: const Text('Add member'),
-                            ),
-                          ],
+                        AvailableTeamMembersDropdown(
+                          availableMembers: _availableMembers,
+                          selectedMember: _selectedMember,
+                          onMemberSelected: (member) {
+                            setState(() {
+                              _selectedMember = member;
+                            });
+                          },
+                          onMemberAdded: (member) {
+                            if (member != null) {
+                              setState(() {
+                                _availableMembers.remove(member);
+                                _selectedMembers.add(member);
+                                _selectedMember = null;
+                              });
+                            }
+                          },
                         ),
                         const SizedBox(height: 13.6),
                         AddNewMemberContainer(
@@ -104,42 +86,21 @@ class _CreateTeamState extends State<CreateTeam> {
                   ),
                   const SizedBox(width: 13.6),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Team members',
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                        Expanded(
-                          child: Row(
-                            children: [
-                              BorderedListView(
-                                onMemberSelected: (member) {
-                                  setState(() {
-                                    _selectedMember = member;
-                                  });
-                                },
-                                selectedMembers: _selectedMembers,
-                                selectedMember: _selectedMember,
-                              ),
-                              const SizedBox(width: 13.6),
-                              FilledButton(
-                                onPressed: () {
-                                  if (_selectedMember != null) {
-                                    setState(() {
-                                      _selectedMembers.remove(_selectedMember);
-                                      _availableMembers.add(_selectedMember!);
-                                      _selectedMember = null;
-                                    });
-                                  }
-                                },
-                                child: const Text('Remove selected'),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                    child: SelectedTeamMembersList(
+                      selectedMembers: _selectedMembers,
+                      selectedMember: _selectedMember,
+                      onMemberSelected: (member) {
+                        setState(() {
+                          _selectedMember = member;
+                        });
+                      },
+                      onMemberRemoved: (member) {
+                        setState(() {
+                          _selectedMembers.remove(member);
+                          _availableMembers.add(member);
+                          _selectedMember = null;
+                        });
+                      },
                     ),
                   ),
                 ],
@@ -157,10 +118,104 @@ class _CreateTeamState extends State<CreateTeam> {
   }
 }
 
+class AvailableTeamMembersDropdown extends StatelessWidget {
+  final List<Person> availableMembers;
+  final Person? selectedMember;
+  final void Function(Person? member) onMemberSelected;
+  final void Function(Person? member) onMemberAdded;
+
+  const AvailableTeamMembersDropdown({
+    super.key,
+    required this.availableMembers,
+    required this.selectedMember,
+    required this.onMemberSelected,
+    required this.onMemberAdded,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        DropdownMenu(
+          key: ValueKey(availableMembers.length),
+          dropdownMenuEntries: availableMembers
+              .map(
+                (person) => DropdownMenuEntry<Person>(
+                  value: person,
+                  label: person.fullName,
+                ),
+              )
+              .toList(),
+          label: const Text('Select team member'),
+          onSelected: onMemberSelected,
+          width: 136.6 * 2,
+        ),
+        const SizedBox(width: 13.6),
+        FilledButton(
+          onPressed: () {
+            if (selectedMember != null) {
+              onMemberAdded(selectedMember);
+            }
+          },
+          child: const Text('Add member'),
+        ),
+      ],
+    );
+  }
+}
+
+class SelectedTeamMembersList extends StatelessWidget {
+  final List<Person> selectedMembers;
+  final Person? selectedMember;
+  final void Function(Person member) onMemberSelected;
+  final void Function(Person member) onMemberRemoved;
+
+  const SelectedTeamMembersList({
+    super.key,
+    required this.selectedMembers,
+    required this.selectedMember,
+    required this.onMemberSelected,
+    required this.onMemberRemoved,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Team members',
+          style: Theme.of(context).textTheme.headlineSmall,
+        ),
+        Expanded(
+          child: Row(
+            children: [
+              BorderedListView(
+                onMemberSelected: onMemberSelected,
+                selectedMembers: selectedMembers,
+                selectedMember: selectedMember,
+              ),
+              const SizedBox(width: 13.6),
+              FilledButton(
+                onPressed: () {
+                  if (selectedMember != null) {
+                    onMemberRemoved(selectedMember!);
+                  }
+                },
+                child: const Text('Remove selected'),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 // TODO: triggering all errors cause pixel overflow, fix it somehow
 class AddNewMemberContainer extends StatefulWidget {
   final List<Person> selectedMembers;
-  final void Function(Person person) onMemberAdded;
+  final void Function(Person member) onMemberAdded;
 
   const AddNewMemberContainer({
     super.key,

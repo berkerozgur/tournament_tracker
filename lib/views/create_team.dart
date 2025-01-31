@@ -14,6 +14,8 @@ class CreateTeam extends StatefulWidget {
 }
 
 class _CreateTeamState extends State<CreateTeam> {
+  late final TextEditingController _teamName;
+  final _formKey = GlobalKey<FormState>();
   var _availableMembers = <Person>[];
   final _selectedMembers = <Person>[];
   Person? _selectedMember;
@@ -28,6 +30,7 @@ class _CreateTeamState extends State<CreateTeam> {
   @override
   void initState() {
     super.initState();
+    _teamName = TextEditingController();
     _getAllPeople();
   }
 
@@ -56,6 +59,12 @@ class _CreateTeamState extends State<CreateTeam> {
   }
 
   @override
+  void dispose() {
+    _teamName.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -64,57 +73,83 @@ class _CreateTeamState extends State<CreateTeam> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Expanded(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      children: [
-                        const TextField(
-                          decoration: InputDecoration(
-                            label: Text('Team name'),
-                            border: OutlineInputBorder(),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              Expanded(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            controller: _teamName,
+                            decoration: const InputDecoration(
+                              label: Text('Team name'),
+                              border: OutlineInputBorder(),
+                            ),
+                            validator: (value) {
+                              if (value != null) {
+                                if (_teamName.text.isEmpty) {
+                                  return 'Please enter a team name';
+                                }
+                              }
+                              return null;
+                            },
                           ),
-                        ),
-                        const SizedBox(height: 13.6),
-                        AvailableTeamMembersDropdown(
-                          availableMembers: _availableMembers,
-                          selectedMember: _selectedMember,
-                          onMemberSelected: _selectMember,
-                          onMemberAdded: _addMemberToSelectedList,
-                        ),
-                        const SizedBox(height: 13.6),
-                        AddNewMemberContainer(
-                          selectedMembers: _selectedMembers,
-                          onMemberAdded: (member) {
-                            setState(() {
-                              _selectedMembers.add(member);
-                            });
-                          },
-                        ),
-                      ],
+                          const SizedBox(height: 13.6),
+                          AvailableTeamMembersDropdown(
+                            availableMembers: _availableMembers,
+                            selectedMember: _selectedMember,
+                            onMemberSelected: _selectMember,
+                            onMemberAdded: _addMemberToSelectedList,
+                          ),
+                          const SizedBox(height: 13.6),
+                          AddNewMemberContainer(
+                            selectedMembers: _selectedMembers,
+                            onMemberAdded: (member) {
+                              setState(() {
+                                _selectedMembers.add(member);
+                              });
+                            },
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 13.6),
-                  Expanded(
-                    child: SelectedTeamMembersList(
-                      selectedMembers: _selectedMembers,
-                      selectedMember: _selectedMember,
-                      onMemberSelected: _selectMember,
-                      onMemberRemoved: _removeMemberFromSelectedList,
+                    const SizedBox(width: 13.6),
+                    Expanded(
+                      child: SelectedTeamMembersList(
+                        selectedMembers: _selectedMembers,
+                        selectedMember: _selectedMember,
+                        onMemberSelected: _selectMember,
+                        onMemberRemoved: _removeMemberFromSelectedList,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 13.6 * 3),
-            FilledButton(
-              onPressed: () {},
-              child: const Text('Create team'),
-            ),
-          ],
+              const SizedBox(height: 13.6 * 3),
+              FilledButton(
+                onPressed: () {
+                  if (_formKey.currentState?.validate() ?? false) {
+                    if (_selectedMembers.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                              'Please select team members before creating the '
+                              'team'),
+                        ),
+                      );
+                      return;
+                    }
+                    // TODO: Create team with name and selected members
+                  }
+                },
+                child: const Text('Create team'),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -31,6 +31,30 @@ class _CreateTeamState extends State<CreateTeam> {
     _getAllPeople();
   }
 
+  void _selectMember(Person? member) {
+    setState(() {
+      _selectedMember = member;
+    });
+  }
+
+  void _addMemberToSelectedList(Person? member) {
+    if (member != null) {
+      setState(() {
+        _availableMembers.remove(member);
+        _selectedMembers.add(member);
+        _selectedMember = null;
+      });
+    }
+  }
+
+  void _removeMemberFromSelectedList(Person member) {
+    setState(() {
+      _selectedMembers.remove(member);
+      _availableMembers.add(member);
+      _selectedMember = null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -58,29 +82,18 @@ class _CreateTeamState extends State<CreateTeam> {
                         AvailableTeamMembersDropdown(
                           availableMembers: _availableMembers,
                           selectedMember: _selectedMember,
-                          onMemberSelected: (member) {
-                            setState(() {
-                              _selectedMember = member;
-                            });
-                          },
-                          onMemberAdded: (member) {
-                            if (member != null) {
-                              setState(() {
-                                _availableMembers.remove(member);
-                                _selectedMembers.add(member);
-                                _selectedMember = null;
-                              });
-                            }
-                          },
+                          onMemberSelected: _selectMember,
+                          onMemberAdded: _addMemberToSelectedList,
                         ),
                         const SizedBox(height: 13.6),
                         AddNewMemberContainer(
-                            selectedMembers: _selectedMembers,
-                            onMemberAdded: (person) {
-                              setState(() {
-                                _selectedMembers.add(person);
-                              });
-                            })
+                          selectedMembers: _selectedMembers,
+                          onMemberAdded: (member) {
+                            setState(() {
+                              _selectedMembers.add(member);
+                            });
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -89,18 +102,8 @@ class _CreateTeamState extends State<CreateTeam> {
                     child: SelectedTeamMembersList(
                       selectedMembers: _selectedMembers,
                       selectedMember: _selectedMember,
-                      onMemberSelected: (member) {
-                        setState(() {
-                          _selectedMember = member;
-                        });
-                      },
-                      onMemberRemoved: (member) {
-                        setState(() {
-                          _selectedMembers.remove(member);
-                          _availableMembers.add(member);
-                          _selectedMember = null;
-                        });
-                      },
+                      onMemberSelected: _selectMember,
+                      onMemberRemoved: _removeMemberFromSelectedList,
                     ),
                   ),
                 ],

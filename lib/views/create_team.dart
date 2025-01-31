@@ -17,47 +17,19 @@ class _CreateTeamState extends State<CreateTeam> {
   var _availableMembers = <Person>[];
   final _selectedMembers = <Person>[];
   Person? _selectedMember;
-  // TODO: how to get async data and init as a class field?
-  void _getAllPeople() async {
-    _availableMembers = await GlobalConfig.connection!.getAllPeople();
-  }
 
-  void _createSampleData() {
-    _availableMembers.add(Person(
-      id: -1,
-      emailAddress: 'emailAddress',
-      firstName: 'John',
-      lastName: 'Doe',
-      phoneNumber: 'phoneNumber',
-    ));
-    _availableMembers.add(Person(
-      id: -1,
-      emailAddress: 'emailAddress',
-      firstName: 'Jane',
-      lastName: 'Doe',
-      phoneNumber: 'phoneNumber',
-    ));
-    _selectedMembers.add(Person(
-      id: -1,
-      emailAddress: 'emailAddress',
-      firstName: 'Jesse',
-      lastName: 'Pinkman',
-      phoneNumber: 'phoneNumber',
-    ));
-    _selectedMembers.add(Person(
-      id: -1,
-      emailAddress: 'emailAddress',
-      firstName: 'Walter',
-      lastName: 'White',
-      phoneNumber: 'phoneNumber',
-    ));
+  Future<void> _getAllPeople() async {
+    final availableMembers = await GlobalConfig.connection!.getAllPeople();
+    setState(() {
+      _availableMembers = availableMembers;
+    });
   }
 
   @override
   void initState() {
     super.initState();
-    _createSampleData();
-    // _getAllPeople();
+    // _createSampleData();
+    _getAllPeople();
   }
 
   @override

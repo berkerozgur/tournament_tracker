@@ -1,5 +1,6 @@
 import '../models/person.dart';
 import '../models/prize.dart';
+import '../models/team.dart';
 
 /// Abstract class representing a connection to a data source for managing prize data.
 ///
@@ -18,6 +19,12 @@ abstract class DataConnection {
   /// Takes a [Person] object as a parameter and returns a [Future] that
   /// completes with the created [Person] object.
   Future<Person> createPerson(Person person);
+
+  /// Creates a new team in the data source.
+  ///
+  /// Takes a [Team] object as a parameter and returns a [Future] that
+  /// completes with the created [Team] object.
+  Future<Team> createTeam(Team team);
 
   /// Retrieves all people from the data source.
   ///

@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart' as path_provider;
 
 import '../models/person.dart';
 import '../models/prize.dart';
+import '../models/team.dart';
 
 // TODO: Convert this class to a String extension
 class TextConnectionHelper {
@@ -68,7 +69,63 @@ class TextConnectionHelper {
     return people;
   }
 
+  static Future<List<Team>> convertToTeams(
+    List<String> lines,
+    String peopleFileName,
+  ) async {
+    // team id,team name,person ids separated by pipe
+    // example: 1,Berker's Team,1|5|9
+    final teams = <Team>[];
+    final filePath = await TextConnectionHelper.getFilePath(peopleFileName);
+    final peopleLines = await TextConnectionHelper.readLines(filePath);
+    final people = TextConnectionHelper.convertToPeople(peopleLines);
+    var teamMembers = <Person>[];
+    for (var line in lines) {
+      final cols = line.split(',');
+      final personIds = cols[2].split('|');
+      for (var id in personIds) {
+        teamMembers =
+            people.where((member) => member.id == int.parse(id)).toList();
+      }
+      final team = Team(
+        id: int.parse(cols[0]),
+        members: teamMembers,
+        name: cols[1],
+      );
+      teams.add(team);
+    }
+    return teams;
+  }
+
   // TODO: writing to files can be generic
+  // TODO: Add column names for CSV files to ensure proper data organization and retrieval.
+  static Future<void> writeToTeamsFile(
+    List<Team> teams,
+    String fileName,
+  ) async {
+    // team id,team name,person ids separated by pipe
+    // example: 1,Berker's Team,1|5|9
+    final lines = <String>[];
+    var memberIds = '';
+    for (var team in teams) {
+      for (var member in team.members) {
+        memberIds += '${member.id}|';
+      }
+      // Removes last pipe from the string
+      memberIds = memberIds.substring(0, memberIds.length - 1);
+      lines.add('${team.id},${team.name},$memberIds');
+    }
+
+    var teamsFile = File(await getFilePath(fileName));
+    // file will be overwritten
+    var sink = teamsFile.openWrite();
+    for (var line in lines) {
+      sink.writeln(line);
+    }
+    await sink.flush();
+    await sink.close();
+  }
+
   static Future<void> writeToPrizesFile(
     List<Prize> prizes,
     String fileName,

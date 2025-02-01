@@ -2,13 +2,17 @@
 
 import '../models/person.dart';
 import '../models/prize.dart';
+import '../models/team.dart';
 import 'data_connection.dart';
 import 'text_connection_helper.dart';
 
 // TODO: Document this class
+// TODO: This class requires refactoring to eliminate repetitive code and improve maintainability.
 class TextConnection extends DataConnection {
   static const _PRIZES_FILE = 'Prizes.csv';
   static const _PEOPLE_FILE = 'People.csv';
+  static const _TEAMS_FILE = 'Teams.csv';
+
   // TODO: these methods also can be generic?
   @override
   Future<Prize> createPrize(Prize prize) async {
@@ -34,14 +38,12 @@ class TextConnection extends DataConnection {
 
   @override
   Future<Person> createPerson(Person person) async {
-    final filePath = await TextConnectionHelper.getFilePath(_PEOPLE_FILE);
-    final lines = await TextConnectionHelper.readLines(filePath);
-    final people = TextConnectionHelper.convertToPeople(lines);
+    final people = await getAllPeople();
 
     var currentId = 1;
     if (people.isNotEmpty) {
-      final sortedPrizes = [...people]..sort((a, b) => b.id.compareTo(a.id));
-      currentId = sortedPrizes.first.id + 1;
+      final sortedPeople = [...people]..sort((a, b) => b.id.compareTo(a.id));
+      currentId = sortedPeople.first.id + 1;
     }
     person.id = currentId;
     // Add the new record with the new id (max+1)
@@ -58,5 +60,27 @@ class TextConnection extends DataConnection {
     final filePath = await TextConnectionHelper.getFilePath(_PEOPLE_FILE);
     final lines = await TextConnectionHelper.readLines(filePath);
     return TextConnectionHelper.convertToPeople(lines);
+  }
+
+  @override
+  Future<Team> createTeam(Team team) async {
+    final filePath = await TextConnectionHelper.getFilePath(_TEAMS_FILE);
+    final lines = await TextConnectionHelper.readLines(filePath);
+    final teams =
+        await TextConnectionHelper.convertToTeams(lines, _PEOPLE_FILE);
+
+    var currentId = 1;
+    if (teams.isNotEmpty) {
+      final sortedTeams = [...teams]..sort((a, b) => b.id.compareTo(a.id));
+      currentId = sortedTeams.first.id + 1;
+    }
+    team.id = currentId;
+    // Add the new record with the new id (max+1)
+    teams.add(team);
+    // Convert the prizes to List<String>
+    // Save the strings to the text file
+    await TextConnectionHelper.writeToTeamsFile(teams, _TEAMS_FILE);
+
+    return team;
   }
 }

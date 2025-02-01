@@ -1,9 +1,8 @@
-import 'dart:developer' as dev;
-
 import 'package:flutter/material.dart';
 
 import '../global_config.dart';
 import '../models/person.dart';
+import '../models/team.dart';
 import '../widgets/bordered_list_view.dart';
 
 class CreateTeam extends StatefulWidget {
@@ -131,10 +130,11 @@ class _CreateTeamState extends State<CreateTeam> {
               ),
               const SizedBox(height: 13.6 * 3),
               FilledButton(
-                onPressed: () {
+                onPressed: () async {
                   if (_formKey.currentState?.validate() ?? false) {
+                    final scaffoldMessenger = ScaffoldMessenger.of(context);
                     if (_selectedMembers.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      scaffoldMessenger.showSnackBar(
                         const SnackBar(
                           content: Text(
                               'Please select team members before creating the '
@@ -143,7 +143,21 @@ class _CreateTeamState extends State<CreateTeam> {
                       );
                       return;
                     }
-                    // TODO: Create team with name and selected members
+                    final team = Team(
+                      id: -1,
+                      members: _selectedMembers,
+                      name: _teamName.text,
+                    );
+
+                    final createdTeam =
+                        await GlobalConfig.connection?.createTeam(team);
+
+                    if (!mounted) return;
+                    scaffoldMessenger.showSnackBar(
+                      SnackBar(content: Text(createdTeam.toString())),
+                    );
+
+                    // TODO: Consider resetting text fields if this view remains open
                   }
                 },
                 child: const Text('Create team'),
@@ -400,7 +414,6 @@ class _AddNewMemberContainerState extends State<AddNewMemberContainer> {
                       );
 
                       widget.onMemberAdded(createdPerson!);
-                      dev.log(createdPerson.toString());
 
                       _email.clear();
                       _firstName.clear();

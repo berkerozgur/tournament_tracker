@@ -188,6 +188,7 @@ class AvailableTeamMembersDropdown extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
+        // TODO: Consider refactoring this dropdown and button combination into a reusable custom widget, as it is repeated in other views.
         DropdownMenu(
           key: ValueKey(availableMembers.length),
           dropdownMenuEntries: availableMembers
@@ -236,6 +237,7 @@ class SelectedTeamMembersList extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
+          // TODO: change to selected team members
           'Team members',
           style: Theme.of(context).textTheme.headlineSmall,
         ),

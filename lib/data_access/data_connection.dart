@@ -30,4 +30,13 @@ abstract class DataConnection {
   ///
   /// Returns a [List] of [Person] objects representing all people.
   Future<List<Person>> getAllPeople();
+
+  /// Retrieves a list of all teams.
+  ///
+  /// This method fetches all the teams from the data source and returns them
+  /// as a list of [Team] objects.
+  ///
+  /// Returns:
+  ///   A [Future] that completes with a list of [Team] objects.
+  Future<List<Team>> getAllTeams();
 }

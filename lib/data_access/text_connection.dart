@@ -56,18 +56,8 @@ class TextConnection extends DataConnection {
   }
 
   @override
-  Future<List<Person>> getAllPeople() async {
-    final filePath = await TextConnectionHelper.getFilePath(_PEOPLE_FILE);
-    final lines = await TextConnectionHelper.readLines(filePath);
-    return TextConnectionHelper.convertToPeople(lines);
-  }
-
-  @override
   Future<Team> createTeam(Team team) async {
-    final filePath = await TextConnectionHelper.getFilePath(_TEAMS_FILE);
-    final lines = await TextConnectionHelper.readLines(filePath);
-    final teams =
-        await TextConnectionHelper.convertToTeams(lines, _PEOPLE_FILE);
+    final teams = await getAllTeams();
 
     var currentId = 1;
     if (teams.isNotEmpty) {
@@ -82,5 +72,19 @@ class TextConnection extends DataConnection {
     await TextConnectionHelper.writeToTeamsFile(teams, _TEAMS_FILE);
 
     return team;
+  }
+
+  @override
+  Future<List<Person>> getAllPeople() async {
+    final filePath = await TextConnectionHelper.getFilePath(_PEOPLE_FILE);
+    final lines = await TextConnectionHelper.readLines(filePath);
+    return TextConnectionHelper.convertToPeople(lines);
+  }
+
+  @override
+  Future<List<Team>> getAllTeams() async {
+    final filePath = await TextConnectionHelper.getFilePath(_TEAMS_FILE);
+    final lines = await TextConnectionHelper.readLines(filePath);
+    return TextConnectionHelper.convertToTeams(lines, _PEOPLE_FILE);
   }
 }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../widgets/bordered_list_view.dart';
 import '../widgets/custom_text_form_field.dart';
 
 class TournamentViewer extends StatefulWidget {
@@ -38,7 +37,8 @@ class _TournamentViewerState extends State<TournamentViewer> {
                 SizedBox(height: 13.6),
                 LabeledCheckbox(label: 'Unplayed only'),
                 SizedBox(height: 13.6),
-                Expanded(child: BorderedListView()),
+                // SelectedObjectsList will take this ones place
+                // Expanded(child: BorderedListView()),
               ],
             ),
             Expanded(

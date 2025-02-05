@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../global_config.dart';
-import '../models/prize.dart';
 import '../models/team.dart';
-import '../widgets/add_to_list_dropdown.dart';
+import '../widgets/shared/add_to_list_dropdown.dart';
+import '../widgets/shared/selected_objects_list.dart';
 import '../widgets/custom_text_form_field.dart';
 
 class CreateTournament extends StatefulWidget {
@@ -47,7 +47,7 @@ class _CreateTournamentState extends State<CreateTournament> {
     }
   }
 
-  void _removeMemberFromSelectedList(Team team) {
+  void _removeTeamFromSelectedList(Team team) {
     setState(() {
       _selectedTeams.remove(team);
       _availableTeams.add(team);
@@ -113,29 +113,21 @@ class _CreateTournamentState extends State<CreateTournament> {
                     child: Column(
                       children: [
                         Expanded(
-                          child: SelectedTeamsList(
-                            selectedTeams: _selectedTeams,
-                            selectedTeam: _selectedTeam,
-                            onTeamSelected: _selectTeam,
-                            onTeamRemoved: _removeMemberFromSelectedList,
+                          child: SelectedObjectsList<Team>(
+                            selectedObjects: _selectedTeams,
+                            listTitle: 'Selected teams',
+                            listTileTitleBuilder: (team) => team.name,
+                            onObjectRemoved: _removeTeamFromSelectedList,
                           ),
                         ),
                         const SizedBox(height: 13.6),
-                        Text(
-                          'Prizes',
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
+                        // TODO: dont forget to change this to prizes when the time comes
                         Expanded(
-                          child: Row(
-                            children: [
-                              const BorderedPrizesListView(),
-                              const SizedBox(width: 13.6),
-                              // TODO: Replace delete buttons with ListTile trailing remove icon for better UX
-                              FilledButton(
-                                onPressed: () {},
-                                child: const Text('Delete selected'),
-                              ),
-                            ],
+                          child: SelectedObjectsList<Team>(
+                            selectedObjects: _selectedTeams,
+                            listTitle: 'Prizes',
+                            listTileTitleBuilder: (team) => team.name,
+                            onObjectRemoved: _removeTeamFromSelectedList,
                           ),
                         ),
                       ],
@@ -152,132 +144,6 @@ class _CreateTournamentState extends State<CreateTournament> {
           ],
         ),
       ),
-    );
-  }
-}
-
-class BorderedTeamsListView extends StatelessWidget {
-  final List<Team>? selectedTeams;
-  final Team? selectedTeam;
-  final void Function(Team team)? onTeamSelected;
-
-  const BorderedTeamsListView({
-    super.key,
-    required this.selectedTeams,
-    required this.selectedTeam,
-    required this.onTeamSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: MediaQuery.of(context).size.width * 0.3,
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: Theme.of(context).colorScheme.outline),
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child: ListView.builder(
-          itemCount: selectedTeams?.length ?? 0,
-          itemBuilder: (context, index) {
-            final team = selectedTeams![index];
-            return ListTile(
-              onTap: () {
-                onTeamSelected?.call(team);
-              },
-              selected: selectedTeam == team,
-              title: Text(team.name),
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
-class BorderedPrizesListView extends StatelessWidget {
-  final List<Prize>? selectedPrizes;
-  final Prize? selectedPrize;
-  final void Function(Prize prize)? onPrizeSelected;
-
-  const BorderedPrizesListView({
-    super.key,
-    this.selectedPrizes,
-    this.selectedPrize,
-    this.onPrizeSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: MediaQuery.of(context).size.width * 0.3,
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: Theme.of(context).colorScheme.outline),
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child: ListView.builder(
-          itemCount: selectedPrizes?.length ?? 0,
-          itemBuilder: (context, index) {
-            final prize = selectedPrizes![index];
-            return ListTile(
-              onTap: () {
-                onPrizeSelected?.call(prize);
-              },
-              selected: selectedPrize == prize,
-              title: Text(prize.placeName),
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
-class SelectedTeamsList extends StatelessWidget {
-  final List<Team> selectedTeams;
-  final Team? selectedTeam;
-  final void Function(Team member) onTeamSelected;
-  final void Function(Team member) onTeamRemoved;
-
-  const SelectedTeamsList({
-    super.key,
-    required this.selectedTeams,
-    required this.selectedTeam,
-    required this.onTeamSelected,
-    required this.onTeamRemoved,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Teams',
-          style: Theme.of(context).textTheme.headlineSmall,
-        ),
-        Expanded(
-          child: Row(
-            children: [
-              BorderedTeamsListView(
-                selectedTeams: selectedTeams,
-                selectedTeam: selectedTeam,
-                onTeamSelected: onTeamSelected,
-              ),
-              const SizedBox(width: 13.6),
-              FilledButton(
-                onPressed: () {
-                  if (selectedTeam != null) {
-                    onTeamRemoved(selectedTeam!);
-                  }
-                },
-                child: const Text('Delete selected'),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

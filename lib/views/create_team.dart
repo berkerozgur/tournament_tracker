@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../global_config.dart';
 import '../models/person.dart';
 import '../models/team.dart';
+import '../widgets/add_to_list_dropdown.dart';
 import '../widgets/bordered_list_view.dart';
 
 class CreateTeam extends StatefulWidget {
@@ -98,11 +99,14 @@ class _CreateTeamState extends State<CreateTeam> {
                             },
                           ),
                           const SizedBox(height: 13.6),
-                          AvailableTeamMembersDropdown(
-                            availableMembers: _availableMembers,
-                            selectedMember: _selectedMember,
-                            onMemberSelected: _selectMember,
-                            onMemberAdded: _addMemberToSelectedList,
+                          AddToListDropdown<Person>(
+                            availableObjects: _availableMembers,
+                            selectedObject: _selectedMember,
+                            onObjectSelected: _selectMember,
+                            onObjectAdded: _addMemberToSelectedList,
+                            entryLabelBuilder: (object) => object.fullName,
+                            dropdownLabelText: 'Select team member',
+                            buttonText: 'Add member',
                           ),
                           const SizedBox(height: 13.6),
                           AddNewMemberContainer(
@@ -166,53 +170,6 @@ class _CreateTeamState extends State<CreateTeam> {
           ),
         ),
       ),
-    );
-  }
-}
-
-class AvailableTeamMembersDropdown extends StatelessWidget {
-  final List<Person> availableMembers;
-  final Person? selectedMember;
-  final void Function(Person? member) onMemberSelected;
-  final void Function(Person? member) onMemberAdded;
-
-  const AvailableTeamMembersDropdown({
-    super.key,
-    required this.availableMembers,
-    required this.selectedMember,
-    required this.onMemberSelected,
-    required this.onMemberAdded,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        // TODO: Consider refactoring this dropdown and button combination into a reusable custom widget, as it is repeated in other views.
-        DropdownMenu(
-          key: ValueKey(availableMembers.length),
-          dropdownMenuEntries: availableMembers
-              .map(
-                (person) => DropdownMenuEntry<Person>(
-                  value: person,
-                  label: person.fullName,
-                ),
-              )
-              .toList(),
-          label: const Text('Select team member'),
-          onSelected: onMemberSelected,
-          width: 136.6 * 2,
-        ),
-        const SizedBox(width: 13.6),
-        FilledButton(
-          onPressed: () {
-            if (selectedMember != null) {
-              onMemberAdded(selectedMember);
-            }
-          },
-          child: const Text('Add member'),
-        ),
-      ],
     );
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../global_config.dart';
 import '../models/prize.dart';
 import '../models/team.dart';
+import '../widgets/add_to_list_dropdown.dart';
 import '../widgets/custom_text_form_field.dart';
 
 class CreateTournament extends StatefulWidget {
@@ -82,11 +83,14 @@ class _CreateTournamentState extends State<CreateTournament> {
                         const SizedBox(height: 13.6),
                         Row(
                           children: [
-                            AddToTeamsRow(
-                              selectedTeam: _selectedTeam,
-                              availableTeams: _availableTeams,
-                              onTeamSelected: _selectTeam,
-                              onTeamAdded: _addTeamToSelectedList,
+                            AddToListDropdown<Team>(
+                              availableObjects: _availableTeams,
+                              selectedObject: _selectedTeam,
+                              onObjectSelected: _selectTeam,
+                              onObjectAdded: _addTeamToSelectedList,
+                              entryLabelBuilder: (object) => object.name,
+                              dropdownLabelText: 'Select team',
+                              buttonText: 'Add team',
                             ),
                             const SizedBox(width: 13.6),
                             const Text('or'),
@@ -148,51 +152,6 @@ class _CreateTournamentState extends State<CreateTournament> {
           ],
         ),
       ),
-    );
-  }
-}
-
-class AddToTeamsRow extends StatelessWidget {
-  final Team? selectedTeam;
-  final List<Team> availableTeams;
-  final void Function(Team? team) onTeamSelected;
-  final void Function(Team? team) onTeamAdded;
-  const AddToTeamsRow({
-    super.key,
-    required this.selectedTeam,
-    required this.availableTeams,
-    required this.onTeamSelected,
-    required this.onTeamAdded,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        DropdownMenu(
-          key: ValueKey(availableTeams.length),
-          dropdownMenuEntries: availableTeams
-              .map(
-                (team) => DropdownMenuEntry<Team>(
-                  value: team,
-                  label: team.name,
-                ),
-              )
-              .toList(),
-          label: const Text('Select team'),
-          onSelected: onTeamSelected,
-          width: 136.6 * 2,
-        ),
-        const SizedBox(width: 13.6),
-        FilledButton(
-          onPressed: () {
-            if (selectedTeam != null) {
-              onTeamAdded(selectedTeam);
-            }
-          },
-          child: const Text('Add team'),
-        ),
-      ],
     );
   }
 }

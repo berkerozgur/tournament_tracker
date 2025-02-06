@@ -5,6 +5,7 @@ import 'package:window_manager/window_manager.dart';
 
 import 'data_access/text_connection_helper.dart';
 import 'global_config.dart';
+import 'models/team.dart';
 import 'views/create_prize.dart';
 import 'views/create_team.dart';
 import 'views/create_tournament.dart';
@@ -45,6 +46,16 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       themeMode: ThemeMode.dark,
       darkTheme: ThemeData.dark(),
+      onGenerateRoute: (settings) {
+        switch (settings.name) {
+          case '/create-team':
+            return MaterialPageRoute<Team>(
+              builder: (context) => const CreateTeam(),
+            );
+          default:
+            return null;
+        }
+      },
       home: const InitialView(),
     );
   }

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../global_config.dart';
+import '../models/prize.dart';
 import '../models/team.dart';
 import '../widgets/shared/add_to_list_dropdown.dart';
 import '../widgets/shared/selected_objects_list.dart';
 import '../widgets/custom_text_form_field.dart';
+import 'create_prize_container.dart';
 
 class CreateTournament extends StatefulWidget {
   const CreateTournament({super.key});
@@ -16,6 +18,7 @@ class CreateTournament extends StatefulWidget {
 class _CreateTournamentState extends State<CreateTournament> {
   var _availableTeams = <Team>[];
   final _selectedTeams = <Team>[];
+  final _selectedPrizes = <Prize>[];
   Team? _selectedTeam;
 
   @override
@@ -37,6 +40,13 @@ class _CreateTournamentState extends State<CreateTournament> {
     });
   }
 
+  // TODO: adding and removing from lists, can they be generic as well?
+  void _addPrizeToSelectedList(Prize prize) {
+    setState(() {
+      _selectedPrizes.add(prize);
+    });
+  }
+
   void _addTeamToSelectedList(Team? team) {
     if (team != null) {
       setState(() {
@@ -45,6 +55,12 @@ class _CreateTournamentState extends State<CreateTournament> {
         _selectedTeam = null;
       });
     }
+  }
+
+  void _removePrizeFromSelectedList(Prize prize) {
+    setState(() {
+      _selectedPrizes.remove(prize);
+    });
   }
 
   void _removeTeamFromSelectedList(Team team) {
@@ -95,16 +111,24 @@ class _CreateTournamentState extends State<CreateTournament> {
                             const SizedBox(width: 13.6),
                             const Text('or'),
                             TextButton(
-                              onPressed: () {},
+                              // Navigator is used here and showDialog is used elsewhere.
+                              // I will decide on a consistent approach after completing all views.
+                              onPressed: () async {
+                                final team = await Navigator.pushNamed<Team>(
+                                  context,
+                                  '/create-team',
+                                );
+                                if (team != null) {
+                                  setState(() {
+                                    _selectedTeams.add(team);
+                                  });
+                                }
+                              },
                               child: const Text('Create new team'),
                             ),
                           ],
                         ),
                         const SizedBox(height: 136),
-                        FilledButton(
-                          onPressed: () {},
-                          child: const Text('Create prize'),
-                        ),
                       ],
                     ),
                   ),
@@ -112,6 +136,7 @@ class _CreateTournamentState extends State<CreateTournament> {
                   Expanded(
                     child: Column(
                       children: [
+                        // TODO: these lists should expand right half of the screen
                         Expanded(
                           child: SelectedObjectsList<Team>(
                             selectedObjects: _selectedTeams,
@@ -121,13 +146,32 @@ class _CreateTournamentState extends State<CreateTournament> {
                           ),
                         ),
                         const SizedBox(height: 13.6),
-                        // TODO: dont forget to change this to prizes when the time comes
                         Expanded(
-                          child: SelectedObjectsList<Team>(
-                            selectedObjects: _selectedTeams,
+                          child: SelectedObjectsList<Prize>(
+                            selectedObjects: _selectedPrizes,
                             listTitle: 'Prizes',
-                            listTileTitleBuilder: (team) => team.name,
-                            onObjectRemoved: _removeTeamFromSelectedList,
+                            listTitleTrailing: TextButton(
+                              onPressed: () async {
+                                // Call the CreatePrize
+                                // Get back a Prize
+                                final prize = await showDialog<Prize>(
+                                  context: context,
+                                  builder: (context) {
+                                    return const AlertDialog(
+                                      title: Text('Create prize'),
+                                      content: CreatePrizeContainer(),
+                                    );
+                                  },
+                                );
+                                // Take the Prize and put it into selected prizes
+                                if (prize != null) {
+                                  _addPrizeToSelectedList(prize);
+                                }
+                              },
+                              child: const Text('Create prize'),
+                            ),
+                            listTileTitleBuilder: (prize) => prize.placeName,
+                            onObjectRemoved: _removePrizeFromSelectedList,
                           ),
                         ),
                       ],

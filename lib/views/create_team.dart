@@ -1,3 +1,5 @@
+import 'dart:developer' as dev;
+
 import 'package:flutter/material.dart';
 
 import '../global_config.dart';
@@ -158,11 +160,11 @@ class _CreateTeamState extends State<CreateTeam> {
                         await GlobalConfig.connection?.createTeam(team);
 
                     if (!mounted) return;
-                    scaffoldMessenger.showSnackBar(
-                      SnackBar(content: Text(createdTeam.toString())),
-                    );
-
-                    // TODO: Consider resetting text fields if this view remains open
+                    Navigator.pop(context, createdTeam);
+                    // scaffoldMessenger.showSnackBar(
+                    //   SnackBar(content: Text(createdTeam.toString())),
+                    // );
+                    dev.log(createdTeam.toString());
                   }
                 },
                 child: const Text('Create team'),

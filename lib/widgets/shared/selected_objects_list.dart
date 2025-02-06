@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 
 class SelectedObjectsList<T> extends StatelessWidget {
   final List<T> selectedObjects;
-  // final T selectedObject;
   final String listTitle;
+  final Widget? listTitleTrailing;
   final String Function(T object) listTileTitleBuilder;
   final void Function(T object) onObjectRemoved;
 
   const SelectedObjectsList({
     super.key,
     required this.selectedObjects,
-    // required this.selectedObject,
     required this.listTitle,
+    this.listTitleTrailing,
     required this.listTileTitleBuilder,
     required this.onObjectRemoved,
   });
@@ -21,9 +21,15 @@ class SelectedObjectsList<T> extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          listTitle,
-          style: Theme.of(context).textTheme.headlineSmall,
+        Row(
+          children: [
+            Text(
+              listTitle,
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            // TODO: need spacing between these two
+            if (listTitleTrailing != null) listTitleTrailing!,
+          ],
         ),
         Expanded(
           child: SizedBox(

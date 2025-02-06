@@ -1,3 +1,5 @@
+import 'dart:developer' as dev;
+
 import 'package:flutter/material.dart';
 
 import '../global_config.dart';
@@ -134,7 +136,6 @@ class _AddNewMemberContainerState extends State<AddNewMemberContainer> {
                 child: FilledButton(
                   onPressed: () async {
                     if (_formKey.currentState?.validate() ?? false) {
-                      final scaffoldMessenger = ScaffoldMessenger.of(context);
                       // TODO: need something better for the ids
                       var person = Person(
                         id: -1,
@@ -147,12 +148,9 @@ class _AddNewMemberContainerState extends State<AddNewMemberContainer> {
                       final createdPerson =
                           await GlobalConfig.connection?.createPerson(person);
 
-                      if (!mounted) return;
-                      scaffoldMessenger.showSnackBar(
-                        SnackBar(content: Text('Person: $createdPerson')),
-                      );
-
                       widget.onMemberAdded(createdPerson!);
+
+                      dev.log(createdPerson.toString());
 
                       _email.clear();
                       _firstName.clear();

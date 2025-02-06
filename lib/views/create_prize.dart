@@ -192,7 +192,7 @@ class _CreatePrizeState extends State<CreatePrize> {
                       scaffoldMessenger.showSnackBar(
                         SnackBar(content: Text('Prize: $createdPrize')),
                       );
-
+                      // TODO: remove later
                       dev.log(prize.toString());
                       _amount.clear();
                       _percentage.clear();

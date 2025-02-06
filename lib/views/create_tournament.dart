@@ -79,7 +79,7 @@ class _CreateTournamentState extends State<CreateTournament> {
         title: const Text('Create Tournament'),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             Expanded(

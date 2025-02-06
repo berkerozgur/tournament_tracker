@@ -33,7 +33,7 @@ class SelectedObjectsList<T> extends StatelessWidget {
         ),
         Expanded(
           child: SizedBox(
-            width: MediaQuery.of(context).size.width * 0.3,
+            // width: MediaQuery.of(context).size.width * 0.3,
             child: Container(
               decoration: BoxDecoration(
                 border:

@@ -4,9 +4,13 @@ import 'package:decimal/decimal.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart' as path_provider;
 
+import '../models/matchup.dart';
 import '../models/person.dart';
 import '../models/prize.dart';
 import '../models/team.dart';
+import '../models/tournament.dart';
+
+// TODO: Implement methods to retrieve all objects within this file, making them callable from within the TextConnection class.
 
 // TODO: Convert this class to a String extension
 class TextConnectionHelper {
@@ -97,6 +101,60 @@ class TextConnectionHelper {
     return teams;
   }
 
+  static Future<List<Tournament>> convertToTournaments(
+    List<String> lines,
+    String peopleFileName,
+    String prizesFileName,
+    String teamsFileName,
+  ) async {
+    // id,name,fee,team ids,prize ids,round ids
+    // example: 1,Basketball,100,1|2|7,4|9,1^2^3|4^5^6|7^8^9
+    final tournaments = <Tournament>[];
+    // get all teams
+    final teamsFilePath = await TextConnectionHelper.getFilePath(teamsFileName);
+    final teamsLines = await TextConnectionHelper.readLines(teamsFilePath);
+    final allTeams = await TextConnectionHelper.convertToTeams(
+      teamsLines,
+      peopleFileName,
+    );
+    // get all prizes
+    final prizesFilePath =
+        await TextConnectionHelper.getFilePath(prizesFileName);
+    final prizesLines = await TextConnectionHelper.readLines(prizesFilePath);
+    final allPrizes = TextConnectionHelper.convertToPrizes(prizesLines);
+    // Initialize lists to hold entered teams and prizes for the tournament
+    var enteredTeams = <Team>[];
+    var prizes = <Prize>[];
+    for (var line in lines) {
+      final cols = line.split(',');
+      final teamIds = cols[3].split('|');
+      for (var id in teamIds) {
+        enteredTeams =
+            allTeams.where((team) => team.id == int.parse(id)).toList();
+      }
+      final prizeIds = cols[4].split('|');
+      for (var id in prizeIds) {
+        prizes =
+            allPrizes.where((element) => element.id == int.parse(id)).toList();
+      }
+
+      // TODO: Capture rounds info
+      final tournament = Tournament(
+        id: int.parse(cols[0]),
+        enteredTeams: enteredTeams,
+        entryFee: Decimal.parse(cols[2]),
+        name: cols[1],
+        prizes: prizes,
+
+        // An empty list is passed for testing purposes to simulate the
+        // functionality of pretend rounds.
+        rounds: <List<Matchup>>[],
+      );
+      tournaments.add(tournament);
+    }
+    return tournaments;
+  }
+
   // TODO: writing to files can be generic
   // TODO: Add column names for CSV files to ensure proper data organization and retrieval.
   static Future<void> writeToTeamsFile(
@@ -119,6 +177,51 @@ class TextConnectionHelper {
     var teamsFile = File(await getFilePath(fileName));
     // file will be overwritten
     var sink = teamsFile.openWrite();
+    for (var line in lines) {
+      sink.writeln(line);
+    }
+    await sink.flush();
+    await sink.close();
+  }
+
+  static Future<void> writeToTournamentsFile(
+    List<Tournament> tournaments,
+    String fileName,
+  ) async {
+    // id,name,fee,team ids,prize ids,round ids
+    // example: 1,Basketball,100,1|2|7,4|9,1^2^3|4^5^6|7^8^9
+    final lines = <String>[];
+    var teamIds = '';
+    var prizeIds = '';
+    // TODO: dont forget to populate this
+    var roundIds = '';
+    var matchupIds = '';
+    for (var tournament in tournaments) {
+      for (var team in tournament.enteredTeams) {
+        teamIds += '${team.id}|';
+      }
+      for (var prize in tournament.prizes) {
+        prizeIds += '${prize.id}';
+      }
+      for (var round in tournament.rounds) {
+        for (var matchup in round) {
+          matchupIds += '${matchup.id}^';
+        }
+        // Removes last carrot from the string
+        matchupIds = matchupIds.substring(0, matchupIds.length - 1);
+        roundIds += '$matchupIds|';
+      }
+      // Removes last pipe from the string
+      teamIds = teamIds.substring(0, teamIds.length - 1);
+      prizeIds = prizeIds.substring(0, prizeIds.length - 1);
+      lines.add(
+          '${tournament.id},${tournament.name},${tournament.entryFee},$teamIds,'
+          '$prizeIds,$roundIds');
+    }
+
+    var tournamentsFile = File(await getFilePath(fileName));
+    // file will be overwritten
+    var sink = tournamentsFile.openWrite();
     for (var line in lines) {
       sink.writeln(line);
     }

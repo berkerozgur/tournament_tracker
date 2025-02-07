@@ -1,5 +1,4 @@
 import 'package:decimal/decimal.dart' show Decimal;
-import 'package:flutter/material.dart';
 
 import 'matchup.dart';
 import 'prize.dart';
@@ -17,8 +16,10 @@ import 'team.dart';
 /// The [rounds] field is a nested list where:
 /// * Outer list represents tournament rounds (1st round, 2nd round, etc.)
 /// * Inner list contains matchups within each round
-@immutable
 class Tournament {
+  /// The unique identifier for the tournament.
+  int id;
+
   /// List of teams participating in the tournament
   /// Must have at least 2 teams for a valid tournament
   final List<Team> enteredTeams;
@@ -38,7 +39,8 @@ class Tournament {
   /// rounds[1] represents second round matchups, etc.
   final List<List<Matchup>> rounds;
 
-  const Tournament({
+  Tournament({
+    required this.id,
     required this.enteredTeams,
     required this.entryFee,
     required this.name,

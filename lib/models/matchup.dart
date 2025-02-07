@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 import 'matchup_entry.dart';
 import 'team.dart';
 
@@ -9,8 +7,10 @@ import 'team.dart';
 /// * List of competing teams ([entries])
 /// * Tournament round number ([round])
 /// * Winning team ([winner])
-@immutable
 class Matchup {
+  /// The unique identifier for the matchup.
+  int id;
+
   /// The competing teams in this matchup, typically 2 entries for standard tournaments
   final List<MatchupEntry> entries;
 
@@ -21,7 +21,8 @@ class Matchup {
   /// The team that won this matchup and advances to next round
   final Team winner;
 
-  const Matchup({
+  Matchup({
+    required this.id,
     required this.entries,
     required this.round,
     required this.winner,

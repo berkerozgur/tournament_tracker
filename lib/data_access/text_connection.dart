@@ -3,6 +3,7 @@
 import '../models/person.dart';
 import '../models/prize.dart';
 import '../models/team.dart';
+import '../models/tournament.dart';
 import 'data_connection.dart';
 import 'text_connection_helper.dart';
 
@@ -12,14 +13,13 @@ class TextConnection extends DataConnection {
   static const _PRIZES_FILE = 'Prizes.csv';
   static const _PEOPLE_FILE = 'People.csv';
   static const _TEAMS_FILE = 'Teams.csv';
+  static const _TOURNAMENTS_FILE = 'Tournaments.csv';
 
   // TODO: these methods also can be generic?
   @override
   Future<Prize> createPrize(Prize prize) async {
     // Load the text file and convert the text to List<Prize>
-    final filePath = await TextConnectionHelper.getFilePath(_PRIZES_FILE);
-    final lines = await TextConnectionHelper.readLines(filePath);
-    final prizes = TextConnectionHelper.convertToPrizes(lines);
+    final prizes = await getAllPrizes();
     // Find the max id
     var currentId = 1;
     if (prizes.isNotEmpty) {
@@ -46,10 +46,7 @@ class TextConnection extends DataConnection {
       currentId = sortedPeople.first.id + 1;
     }
     person.id = currentId;
-    // Add the new record with the new id (max+1)
     people.add(person);
-    // Convert the prizes to List<String>
-    // Save the strings to the text file
     await TextConnectionHelper.writeToPeopleFile(people, _PEOPLE_FILE);
 
     return person;
@@ -65,13 +62,28 @@ class TextConnection extends DataConnection {
       currentId = sortedTeams.first.id + 1;
     }
     team.id = currentId;
-    // Add the new record with the new id (max+1)
     teams.add(team);
-    // Convert the prizes to List<String>
-    // Save the strings to the text file
     await TextConnectionHelper.writeToTeamsFile(teams, _TEAMS_FILE);
 
     return team;
+  }
+
+  @override
+  Future<void> createTournament(Tournament tournament) async {
+    final tournaments = await getAllTournaments();
+
+    var currentId = 1;
+    if (tournaments.isNotEmpty) {
+      final sortedTeams = [...tournaments]
+        ..sort((a, b) => b.id.compareTo(a.id));
+      currentId = sortedTeams.first.id + 1;
+    }
+    tournament.id = currentId;
+    tournaments.add(tournament);
+    await TextConnectionHelper.writeToTournamentsFile(
+      tournaments,
+      _TOURNAMENTS_FILE,
+    );
   }
 
   @override
@@ -82,9 +94,28 @@ class TextConnection extends DataConnection {
   }
 
   @override
+  Future<List<Prize>> getAllPrizes() async {
+    final filePath = await TextConnectionHelper.getFilePath(_PRIZES_FILE);
+    final lines = await TextConnectionHelper.readLines(filePath);
+    return TextConnectionHelper.convertToPrizes(lines);
+  }
+
+  @override
   Future<List<Team>> getAllTeams() async {
     final filePath = await TextConnectionHelper.getFilePath(_TEAMS_FILE);
     final lines = await TextConnectionHelper.readLines(filePath);
     return TextConnectionHelper.convertToTeams(lines, _PEOPLE_FILE);
+  }
+
+  @override
+  Future<List<Tournament>> getAllTournaments() async {
+    final filePath = await TextConnectionHelper.getFilePath(_TEAMS_FILE);
+    final lines = await TextConnectionHelper.readLines(filePath);
+    return TextConnectionHelper.convertToTournaments(
+      lines,
+      _PEOPLE_FILE,
+      _PRIZES_FILE,
+      _TEAMS_FILE,
+    );
   }
 }

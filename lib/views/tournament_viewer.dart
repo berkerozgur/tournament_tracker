@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../widgets/custom_text_form_field.dart';
-
 class TournamentViewer extends StatefulWidget {
   const TournamentViewer({super.key});
 
@@ -44,14 +42,22 @@ class _TournamentViewerState extends State<TournamentViewer> {
             Expanded(
               child: Column(
                 children: [
-                  const SizedBox(
+                  SizedBox(
                     width: 136.6 * 2,
-                    child: CustomTextFormField(label: 'Team one score'),
+                    child: TextFormField(
+                      decoration: const InputDecoration(
+                        label: Text('Team one score'),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 13.6),
-                  const SizedBox(
+                  SizedBox(
                     width: 136.6 * 2,
-                    child: CustomTextFormField(label: 'Team two score'),
+                    child: TextFormField(
+                      decoration: const InputDecoration(
+                        label: Text('Team two score'),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 13.6),
                   SizedBox(

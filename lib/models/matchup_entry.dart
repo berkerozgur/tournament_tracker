@@ -10,18 +10,18 @@ import 'team.dart';
 @immutable
 class MatchupEntry {
   /// The team competing in this matchup entry
-  final Team competing;
+  final Team? competing;
 
   /// Reference to the parent matchup this entry belongs to
-  final Matchup parent;
+  final Matchup? parent;
 
   /// The score achieved by the team in this matchup
   /// Can be points, goals, or any numeric scoring metric
-  final double score;
+  final double? score;
 
   const MatchupEntry({
-    required this.competing,
-    required this.parent,
-    required this.score,
+    this.competing,
+    this.parent,
+    this.score,
   });
 }

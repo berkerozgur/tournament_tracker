@@ -16,15 +16,21 @@ class Matchup {
 
   /// The tournament round number this matchup belongs to
   /// Round 1 represents first matches, increases as tournament progresses
-  final int round;
+  int round;
 
   /// The team that won this matchup and advances to next round
-  final Team winner;
+  final Team? winner;
 
   Matchup({
     required this.id,
     required this.entries,
     required this.round,
-    required this.winner,
+    this.winner,
   });
+
+  Matchup.empty()
+      : id = -1,
+        entries = [],
+        round = -1,
+        winner = null;
 }

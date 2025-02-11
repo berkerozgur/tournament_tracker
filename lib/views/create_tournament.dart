@@ -7,6 +7,7 @@ import '../models/matchup.dart';
 import '../models/prize.dart';
 import '../models/team.dart';
 import '../models/tournament.dart';
+import '../tournament_logic.dart';
 import '../widgets/shared/add_to_list_dropdown.dart';
 import '../widgets/shared/selected_objects_list.dart';
 import 'create_prize_container.dart';
@@ -229,7 +230,7 @@ class _CreateTournamentState extends State<CreateTournament> {
               ),
               const SizedBox(height: 13.6 * 3),
               FilledButton(
-                onPressed: () {
+                onPressed: () async {
                   if (_formKey.currentState?.validate() ?? false) {
                     if (_selectedTeams.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -252,13 +253,14 @@ class _CreateTournamentState extends State<CreateTournament> {
                       rounds: <List<Matchup>>[],
                     );
 
-                    // TODO: Wire matchups
+                    // Wire matchups
+                    TournamentLogic.createRounds(tournament);
 
                     // Create tournament entry
                     // Create all of the prizes entries
                     // Create all of the teams entries
-                    final createdTournament =
-                        GlobalConfig.connection?.createTournament(tournament);
+                    final createdTournament = await GlobalConfig.connection
+                        ?.createTournament(tournament);
                   }
                 },
                 child: const Text('Create tournament'),

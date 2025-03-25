@@ -25,6 +25,10 @@ class TextConnection extends DataConnection {
   static const _TOURNAMENTS_FILE = 'Tournaments.csv';
 
   // UTILITY
+  Future<void> createDirectory() async {
+    await Directory(await _getDirPath()).create();
+  }
+
   Future<String> _getDirPath() async {
     final docsDir = await path_provider.getApplicationDocumentsDirectory();
     return path.join(docsDir.path, 'TournamentTrackerData');
@@ -108,20 +112,12 @@ class TextConnection extends DataConnection {
       currentId = sortedTeams.first.id + 1;
     }
     tournament.id = currentId;
-    TextConnectionHelper.writeRoundsToFiles(
-      tournament,
-      _MATCHUPS_FILE,
-      _MATCHUP_ENTRIES_FILE,
-    );
+    await _writeRoundsToFiles(tournament);
     tournaments.add(tournament);
-    await TextConnectionHelper.writeToTournamentsFile(
-      tournaments,
-      _TOURNAMENTS_FILE,
-    );
+    await _writeToTournamentsFile(tournaments);
   }
 
   // GET
-
   @override
   Future<List<Person>> getAllPeople() async {
     final filePath = await _getFilePath(_PEOPLE_FILE);
@@ -293,6 +289,7 @@ class TextConnection extends DataConnection {
     final allMatchups = await _getAllMatchups();
     var enteredTeams = <Team>[];
     var tournamentPrizes = <Prize>[];
+
     for (var line in lines) {
       final cols = line.split(',');
 
@@ -337,6 +334,105 @@ class TextConnection extends DataConnection {
   }
 
   // WRITE
+  Future<void> _writeRoundsToFiles(Tournament tournament) async {
+    // Loop through each round
+    // Loop through each matchup
+    // Get the id for the new matchup and save the record
+    // Loop through each entry, get the id and save it
+    for (var round in tournament.rounds) {
+      for (var matchup in round) {
+        // Load all of the matchups from the file
+        // Get the top id and add one
+        // Store the id
+        // Save the matchup record
+        await _writeToMatchupsFile(matchup);
+      }
+    }
+  }
+
+  Future<void> _writeToMatchupsFile(Matchup matchup) async {
+    final lines = <String>[];
+    final matchups = await _getAllMatchups();
+
+    var currentId = 1;
+    if (matchups.isNotEmpty) {
+      final sortedMatchups = [...matchups]
+        ..sort((a, b) => b.id.compareTo(a.id));
+      currentId = sortedMatchups.first.id + 1;
+    }
+    matchup.id = currentId;
+    matchups.add(matchup);
+
+    var entryIds = '';
+    for (var matchup in matchups) {
+      for (var entry in matchup.entries) {
+        entryIds += '${entry.id}|';
+      }
+      // Removes last pipe from the string
+      entryIds = entryIds.substring(0, entryIds.length - 1);
+      lines.add('${matchup.id},,${matchup.winner?.id},${matchup.round}');
+    }
+
+    var matchupsFile = File(await _getFilePath(_MATCHUPS_FILE));
+    var sink = matchupsFile.openWrite();
+    for (var line in lines) {
+      sink.writeln(line);
+    }
+    await sink.flush();
+    await sink.close();
+
+    for (var entry in matchup.entries) {
+      _writeToMatchupEntriesFile(entry);
+    }
+
+    // save to file
+    entryIds = '';
+    for (var matchup in matchups) {
+      for (var entry in matchup.entries) {
+        entryIds += '${entry.id}|';
+      }
+      // Removes last pipe from the string
+      entryIds = entryIds.substring(0, entryIds.length - 1);
+      lines.add(
+          '${matchup.id},$entryIds,${matchup.winner?.id},${matchup.round}');
+    }
+
+    matchupsFile = File(await _getFilePath(_MATCHUPS_FILE));
+    sink = matchupsFile.openWrite();
+    for (var line in lines) {
+      sink.writeln(line);
+    }
+    await sink.flush();
+    await sink.close();
+  }
+
+  Future<void> _writeToMatchupEntriesFile(MatchupEntry entry) async {
+    final allEntries = await _getAllMatchupEntries();
+
+    var currentId = 1;
+    if (allEntries.isNotEmpty) {
+      final sortedEntries = [...allEntries]
+        ..sort((a, b) => b.id.compareTo(a.id));
+      currentId = sortedEntries.first.id + 1;
+    }
+    entry.id = currentId;
+    allEntries.add(entry);
+
+    final lines = <String>[];
+
+    for (var entry in allEntries) {
+      lines.add('${entry.id},${entry.competing},${entry.score}${entry.parent}');
+    }
+
+    var matchupEntriesFile = File(await _getFilePath(_MATCHUP_ENTRIES_FILE));
+    var sink = matchupEntriesFile.openWrite();
+    for (var line in lines) {
+      sink.writeln(line);
+    }
+    await sink.flush();
+    await sink.close();
+  }
+
   Future<void> _writeToPeopleFile(List<Person> people) async {
     final lines = <String>[];
 
@@ -385,6 +481,47 @@ class TextConnection extends DataConnection {
 
     var teamsFile = File(await _getFilePath(_TEAMS_FILE));
     var sink = teamsFile.openWrite();
+    for (var line in lines) {
+      sink.writeln(line);
+    }
+    await sink.flush();
+    await sink.close();
+  }
+
+  Future<void> _writeToTournamentsFile(List<Tournament> tournaments) async {
+    // id,name,fee,team ids,prize ids,round ids
+    // example: 1,Basketball,100,1|2|7,4|9,1^2^3|4^5^6|7^8^9
+    final lines = <String>[];
+    var teamIds = '';
+    var prizeIds = '';
+    // TODO: dont forget to populate this
+    var roundIds = '';
+    var matchupIds = '';
+    for (var tournament in tournaments) {
+      for (var team in tournament.enteredTeams) {
+        teamIds += '${team.id}|';
+      }
+      for (var prize in tournament.prizes) {
+        prizeIds += '${prize.id}';
+      }
+      for (var round in tournament.rounds) {
+        for (var matchup in round) {
+          matchupIds += '${matchup.id}^';
+        }
+        // Removes last carrot from the string
+        matchupIds = matchupIds.substring(0, matchupIds.length - 1);
+        roundIds += '$matchupIds|';
+      }
+      // Removes last pipe from the string
+      teamIds = teamIds.substring(0, teamIds.length - 1);
+      prizeIds = prizeIds.substring(0, prizeIds.length - 1);
+      lines.add(
+          '${tournament.id},${tournament.name},${tournament.entryFee},$teamIds,'
+          '$prizeIds,$roundIds');
+    }
+
+    var tournamentsFile = File(await _getFilePath(_TOURNAMENTS_FILE));
+    var sink = tournamentsFile.openWrite();
     for (var line in lines) {
       sink.writeln(line);
     }

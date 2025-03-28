@@ -148,15 +148,6 @@ class TextConnection extends DataConnection {
     final lines = await _readLines(filePath);
     final tournaments = _convertToTournaments(lines);
     return tournaments;
-    // final filePath = await TextConnectionHelper.getFilePath(_TEAMS_FILE);
-    // final lines = await TextConnectionHelper.readLines(filePath);
-    // return TextConnectionHelper.convertToTournaments(
-    //   lines,
-    //   _PEOPLE_FILE,
-    //   _PRIZES_FILE,
-    //   _TEAMS_FILE,
-    //   _MATCHUPS_FILE,
-    // );
   }
 
   Future<List<Matchup>> _getAllMatchups() async {
@@ -290,17 +281,17 @@ class TextConnection extends DataConnection {
     final teams = await getAllTeams();
     final prizes = await getAllPrizes();
     final allMatchups = await _getAllMatchups();
-    var enteredTeams = <Team>[];
-    var tournamentPrizes = <Prize>[];
 
     for (var line in lines) {
       final cols = line.split(',');
 
+      var enteredTeams = <Team>[];
       final teamIds = cols[3].split('|');
       for (var id in teamIds) {
         enteredTeams = teams.where((team) => team.id == int.parse(id)).toList();
       }
 
+      var tournamentPrizes = <Prize>[];
       final prizeIds = cols[4].split('|');
       for (var id in prizeIds) {
         tournamentPrizes =
@@ -323,6 +314,7 @@ class TextConnection extends DataConnection {
         }
         rounds.add(matchups);
       }
+
       final tournament = Tournament(
         id: int.parse(cols[0]),
         enteredTeams: enteredTeams,
@@ -499,19 +491,37 @@ class TextConnection extends DataConnection {
     // id,name,fee,team ids,prize ids,round ids
     // example: 1,Basketball,100,1|2|7,4|9,1^2^3|4^5^6|7^8^9
     final lines = <String>[];
-    var teamIds = '';
-    var prizeIds = '';
-    // TODO: dont forget to populate this
-    var roundIds = '';
-    var matchupIds = '';
+    // TODO: Remove logs
     for (var tournament in tournaments) {
+      var teamIds = '';
+      if (tournament.enteredTeams.isEmpty) {
+        log('enteredTeams is empty');
+        return;
+      }
       for (var team in tournament.enteredTeams) {
         teamIds += '${team.id}|';
       }
+
+      var prizeIds = '';
+      if (tournament.prizes.isEmpty) {
+        log('prizes is empty');
+        return;
+      }
       for (var prize in tournament.prizes) {
-        prizeIds += '${prize.id}';
+        prizeIds += '${prize.id}|';
+      }
+
+      var roundIds = '';
+      if (tournament.rounds.isEmpty) {
+        log('rounds is empty');
+        return;
       }
       for (var round in tournament.rounds) {
+        var matchupIds = '';
+        if (round.isEmpty) {
+          log('round is empty');
+          return;
+        }
         for (var matchup in round) {
           matchupIds += '${matchup.id}^';
         }
@@ -522,6 +532,7 @@ class TextConnection extends DataConnection {
       // Removes last pipe from the string
       teamIds = teamIds.substring(0, teamIds.length - 1);
       prizeIds = prizeIds.substring(0, prizeIds.length - 1);
+      roundIds = roundIds.substring(0, roundIds.length - 1);
       lines.add(
           '${tournament.id},${tournament.name},${tournament.entryFee},$teamIds,'
           '$prizeIds,$roundIds');

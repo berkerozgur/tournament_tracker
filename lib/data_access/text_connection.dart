@@ -1,5 +1,6 @@
 // ignore_for_file: constant_identifier_names
 
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:decimal/decimal.dart';
@@ -16,7 +17,6 @@ import '../models/tournament.dart';
 import 'data_connection.dart';
 
 class TextConnection extends DataConnection {
-  // TODO: same constants in the GlobalConfig file, replace this
   static const _PEOPLE_FILE = 'People.csv';
   static const _PRIZES_FILE = 'Prizes.csv';
   static const _MATCHUPS_FILE = 'Matchups.csv';
@@ -260,15 +260,18 @@ class TextConnection extends DataConnection {
   }
 
   Future<List<Team>> _convertToTeams(List<String> lines) async {
+    // id,team name,ids separated by pipe
+    // example: 17,FooBarBaz,19|41|53
     final teams = <Team>[];
+    if (lines.isEmpty) return teams;
     final people = await getAllPeople();
-    var teamMembers = <Person>[];
     for (var line in lines) {
+      var teamMembers = <Person>[];
       final cols = line.split(',');
       final memberIds = cols[2].split('|');
       for (var id in memberIds) {
-        teamMembers =
-            people.where((person) => person.id == int.parse(id)).toList();
+        teamMembers
+            .add(people.where((person) => person.id == int.parse(id)).first);
       }
       final team = Team(
         id: int.parse(cols[0]),
@@ -469,8 +472,12 @@ class TextConnection extends DataConnection {
 
   Future<void> _writeToTeamsFile(List<Team> teams) async {
     final lines = <String>[];
-    var memberIds = '';
     for (var team in teams) {
+      var memberIds = '';
+      if (teams.isEmpty) {
+        log('teams is empty');
+        return;
+      }
       for (var member in team.members) {
         memberIds += '${member.id}|';
       }

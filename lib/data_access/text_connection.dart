@@ -48,6 +48,15 @@ class TextConnection extends DataConnection {
     return lines;
   }
 
+  Future<void> _writeLines(String fileName, List<String> lines) async {
+    final sink = File(await _getFilePath(fileName)).openWrite();
+    for (var line in lines) {
+      sink.writeln(line);
+    }
+    await sink.flush();
+    await sink.close();
+  }
+
   // CREATE
   @override
   Future<Person> createPerson(Person person) async {
@@ -165,37 +174,81 @@ class TextConnection extends DataConnection {
   }
 
   Future<Matchup?> _getMatchupById(int? id) async {
-    if (id == null) return null;
-    final allMatchups = await _getAllMatchups();
-    return allMatchups.where((matchup) => matchup.id == id).toList().first;
+    if (id != null) {
+      final filePath = await _getFilePath(_MATCHUPS_FILE);
+      final matchups = await _readLines(filePath);
+      for (var matchup in matchups) {
+        final cols = matchup.split(',');
+        if (cols[0] == id.toString()) {
+          final matchingMatchups = <String>[];
+          matchingMatchups.add(matchup);
+          return (await _convertToMatchups(matchingMatchups)).first;
+        }
+      }
+    }
+    return null;
   }
 
   Future<List<MatchupEntry>> _getMatchupEntriesByIds(String ids) async {
-    final idsSplitted = ids.split('|');
-    final allEntries = await _getAllMatchupEntries();
-    for (var id in idsSplitted) {
-      allEntries.where((entry) => entry.id == int.parse(id)).toList();
+    final filePath = await _getFilePath(_MATCHUP_ENTRIES_FILE);
+    final entries = await _readLines(filePath);
+    final idsSplit = ids.split('|');
+    final matchingEntries = <String>[];
+    for (var id in idsSplit) {
+      for (var entry in entries) {
+        final cols = entry.split(',');
+        if (cols[0] == id) {
+          matchingEntries.add(entry);
+        }
+      }
     }
-    return allEntries;
+    return await _convertToMatchupEntries(matchingEntries);
   }
 
-  Future<Team> _getTeamById(int id) async {
-    final allTeams = await getAllTeams();
-    return allTeams.where((team) => team.id == id).toList().first;
+  Future<Team?> _getTeamById(int? id) async {
+    if (id != null) {
+      final filePath = await _getFilePath(_TEAMS_FILE);
+      final teams = await _readLines(filePath);
+      for (var team in teams) {
+        final cols = team.split(',');
+        if (cols[0] == id.toString()) {
+          final matchingTeams = <String>[];
+          matchingTeams.add(team);
+          return (await _convertToTeams(matchingTeams)).first;
+        }
+      }
+    }
+    return null;
   }
 
   // CONVERT
+  String _convertIdsToString<T>(
+    List<T> items,
+    int Function(T item) idSelector,
+  ) {
+    if (items.isEmpty) {
+      return '';
+    }
+
+    var idsString = '';
+    for (var item in items) {
+      idsString += '${idSelector(item)}|';
+    }
+
+    // Removes last pipe from the string
+    return idsString.substring(0, idsString.length - 1);
+  }
+
   Future<List<Matchup>> _convertToMatchups(List<String> lines) async {
-    // id,entries (pipe delimited by id),winner id,round
-    // 1,1|2|3,5,2
+    // id,entries separated by pipe,winner id,round
     final matchups = <Matchup>[];
     for (var line in lines) {
       final cols = line.split(',');
       final matchup = Matchup(
         id: int.parse(cols[0]),
         entries: await _getMatchupEntriesByIds(cols[1]),
-        winner: await _getTeamById(int.parse(cols[2])),
         round: int.parse(cols[3]),
+        winner: await _getTeamById(int.tryParse(cols[2])),
       );
       matchups.add(matchup);
     }
@@ -203,15 +256,17 @@ class TextConnection extends DataConnection {
   }
 
   Future<List<MatchupEntry>> _convertToMatchupEntries(
-      List<String> lines) async {
+    List<String> lines,
+  ) async {
+    // id,team competing,score,parent matchup
     final entries = <MatchupEntry>[];
     for (var line in lines) {
       final cols = line.split(',');
       final entry = MatchupEntry(
         id: int.parse(cols[0]),
-        competing: await _getTeamById(int.parse(cols[1])),
-        score: double.parse(cols[2]),
+        competing: await _getTeamById(int.tryParse(cols[1])),
         parent: await _getMatchupById(int.tryParse(cols[3])),
+        score: double.tryParse(cols[2]),
       );
       entries.add(entry);
     }
@@ -280,7 +335,7 @@ class TextConnection extends DataConnection {
     final tournaments = <Tournament>[];
     final teams = await getAllTeams();
     final prizes = await getAllPrizes();
-    final allMatchups = await _getAllMatchups();
+    final matchups = await _getAllMatchups();
 
     for (var line in lines) {
       final cols = line.split(',');
@@ -292,27 +347,28 @@ class TextConnection extends DataConnection {
       }
 
       var tournamentPrizes = <Prize>[];
-      final prizeIds = cols[4].split('|');
-      for (var id in prizeIds) {
-        tournamentPrizes =
-            prizes.where((prize) => prize.id == int.parse(id)).toList();
+      if (cols[4].isNotEmpty) {
+        final prizeIds = cols[4].split('|');
+        for (var id in prizeIds) {
+          tournamentPrizes =
+              prizes.where((prize) => prize.id == int.parse(id)).toList();
+        }
       }
 
       // Capture rounds info
+      final roundIds = cols[5].split('|');
       final rounds = <List<Matchup>>[];
-      final roundsStr = cols[5].split('|');
-      for (var round in roundsStr) {
-        final matchups = <Matchup>[];
-        final matchupsStr = round.split('^');
-        for (var matchupId in matchupsStr) {
-          matchups.add(
-            allMatchups
-                .where((matchup) => matchup.id == int.parse(matchupId))
-                .toList()
-                .first,
+      for (var roundId in roundIds) {
+        final tournamentMatchups = <Matchup>[];
+        final matchupIds = roundId.split('^');
+        for (var matchupId in matchupIds) {
+          tournamentMatchups.add(
+            matchups.firstWhere(
+              (matchup) => matchup.id == int.parse(matchupId),
+            ),
           );
         }
-        rounds.add(matchups);
+        rounds.add(tournamentMatchups);
       }
 
       final tournament = Tournament(
@@ -346,7 +402,6 @@ class TextConnection extends DataConnection {
   }
 
   Future<void> _writeToMatchupsFile(Matchup matchup) async {
-    final lines = <String>[];
     final matchups = await _getAllMatchups();
 
     var currentId = 1;
@@ -358,74 +413,52 @@ class TextConnection extends DataConnection {
     matchup.id = currentId;
     matchups.add(matchup);
 
-    var entryIds = '';
-    for (var matchup in matchups) {
-      for (var entry in matchup.entries) {
-        entryIds += '${entry.id}|';
-      }
-      // Removes last pipe from the string
-      entryIds = entryIds.substring(0, entryIds.length - 1);
-      lines.add('${matchup.id},,${matchup.winner?.id},${matchup.round}');
-    }
-
-    var matchupsFile = File(await _getFilePath(_MATCHUPS_FILE));
-    var sink = matchupsFile.openWrite();
-    for (var line in lines) {
-      sink.writeln(line);
-    }
-    await sink.flush();
-    await sink.close();
-
     for (var entry in matchup.entries) {
-      _writeToMatchupEntriesFile(entry);
+      await _writeToMatchupEntriesFile(entry);
     }
 
     // save to file
-    entryIds = '';
+    final lines = <String>[];
     for (var matchup in matchups) {
-      for (var entry in matchup.entries) {
-        entryIds += '${entry.id}|';
+      // id,entry ids separated by pipe,winner id,round
+      final entryIds = _convertIdsToString(
+        matchup.entries,
+        (matchup) => matchup.id,
+      );
+      var winnerId = 'null';
+      if (matchup.winner != null) {
+        winnerId = matchup.winner!.id.toString();
       }
-      // Removes last pipe from the string
-      entryIds = entryIds.substring(0, entryIds.length - 1);
-      lines.add(
-          '${matchup.id},$entryIds,${matchup.winner?.id},${matchup.round}');
+      lines.add('${matchup.id},$entryIds,$winnerId,${matchup.round}');
     }
-
-    matchupsFile = File(await _getFilePath(_MATCHUPS_FILE));
-    sink = matchupsFile.openWrite();
-    for (var line in lines) {
-      sink.writeln(line);
-    }
-    await sink.flush();
-    await sink.close();
+    _writeLines(_MATCHUPS_FILE, lines);
   }
 
   Future<void> _writeToMatchupEntriesFile(MatchupEntry entry) async {
-    final allEntries = await _getAllMatchupEntries();
+    final entries = await _getAllMatchupEntries();
 
     var currentId = 1;
-    if (allEntries.isNotEmpty) {
-      final sortedEntries = [...allEntries]
-        ..sort((a, b) => b.id.compareTo(a.id));
+    if (entries.isNotEmpty) {
+      final sortedEntries = [...entries]..sort((a, b) => b.id.compareTo(a.id));
       currentId = sortedEntries.first.id + 1;
     }
     entry.id = currentId;
-    allEntries.add(entry);
+    entries.add(entry);
 
     final lines = <String>[];
-
-    for (var entry in allEntries) {
-      lines.add('${entry.id},${entry.competing},${entry.score}${entry.parent}');
+    // id,team competing id,score,parent matchup id
+    for (var entry in entries) {
+      var parentId = 'null';
+      if (entry.parent != null) {
+        parentId = entry.parent!.id.toString();
+      }
+      var competingId = 'null';
+      if (entry.competing != null) {
+        competingId = entry.competing!.id.toString();
+      }
+      lines.add('${entry.id},$competingId,${entry.score},$parentId');
     }
-
-    var matchupEntriesFile = File(await _getFilePath(_MATCHUP_ENTRIES_FILE));
-    var sink = matchupEntriesFile.openWrite();
-    for (var line in lines) {
-      sink.writeln(line);
-    }
-    await sink.flush();
-    await sink.close();
+    _writeLines(_MATCHUP_ENTRIES_FILE, lines);
   }
 
   Future<void> _writeToPeopleFile(List<Person> people) async {
@@ -465,26 +498,10 @@ class TextConnection extends DataConnection {
   Future<void> _writeToTeamsFile(List<Team> teams) async {
     final lines = <String>[];
     for (var team in teams) {
-      var memberIds = '';
-      if (teams.isEmpty) {
-        log('teams is empty');
-        return;
-      }
-      for (var member in team.members) {
-        memberIds += '${member.id}|';
-      }
-      // Removes last pipe from the string
-      memberIds = memberIds.substring(0, memberIds.length - 1);
+      final memberIds = _convertIdsToString(teams, (item) => item.id);
       lines.add('${team.id},${team.name},$memberIds');
     }
-
-    var teamsFile = File(await _getFilePath(_TEAMS_FILE));
-    var sink = teamsFile.openWrite();
-    for (var line in lines) {
-      sink.writeln(line);
-    }
-    await sink.flush();
-    await sink.close();
+    _writeLines(_TEAMS_FILE, lines);
   }
 
   Future<void> _writeToTournamentsFile(List<Tournament> tournaments) async {
@@ -493,24 +510,14 @@ class TextConnection extends DataConnection {
     final lines = <String>[];
     // TODO: Remove logs
     for (var tournament in tournaments) {
-      var teamIds = '';
-      if (tournament.enteredTeams.isEmpty) {
-        log('enteredTeams is empty');
-        return;
-      }
-      for (var team in tournament.enteredTeams) {
-        teamIds += '${team.id}|';
-      }
-
-      var prizeIds = '';
-      if (tournament.prizes.isEmpty) {
-        log('prizes is empty');
-        return;
-      }
-      for (var prize in tournament.prizes) {
-        prizeIds += '${prize.id}|';
-      }
-
+      final teamIds = _convertIdsToString(
+        tournament.enteredTeams,
+        (team) => team.id,
+      );
+      final prizeIds = _convertIdsToString(
+        tournament.prizes,
+        (prize) => prize.id,
+      );
       var roundIds = '';
       if (tournament.rounds.isEmpty) {
         log('rounds is empty');
@@ -529,21 +536,11 @@ class TextConnection extends DataConnection {
         matchupIds = matchupIds.substring(0, matchupIds.length - 1);
         roundIds += '$matchupIds|';
       }
-      // Removes last pipe from the string
-      teamIds = teamIds.substring(0, teamIds.length - 1);
-      prizeIds = prizeIds.substring(0, prizeIds.length - 1);
       roundIds = roundIds.substring(0, roundIds.length - 1);
       lines.add(
           '${tournament.id},${tournament.name},${tournament.entryFee},$teamIds,'
           '$prizeIds,$roundIds');
     }
-
-    var tournamentsFile = File(await _getFilePath(_TOURNAMENTS_FILE));
-    var sink = tournamentsFile.openWrite();
-    for (var line in lines) {
-      sink.writeln(line);
-    }
-    await sink.flush();
-    await sink.close();
+    _writeLines(_TOURNAMENTS_FILE, lines);
   }
 }

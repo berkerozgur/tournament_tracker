@@ -136,9 +136,11 @@ class _CreateTournamentState extends State<CreateTournament> {
                             keyboardType: TextInputType.number,
                             validator: (value) {
                               if (value != null) {
-                                final fee = Decimal.parse(value);
+                                var fee =
+                                    Decimal.tryParse(value) ?? Decimal.zero;
                                 if (fee < Decimal.zero) {
-                                  return 'Please enter a positive number';
+                                  return 'Please enter a positive number or '
+                                      'leave it empty';
                                 }
                               }
                               return null;
@@ -235,12 +237,14 @@ class _CreateTournamentState extends State<CreateTournament> {
                     if (_selectedTeams.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text(
-                              'Please select teams before creating the tournament'),
+                          content:
+                              Text('Please select teams before creating the '
+                                  'tournament'),
                         ),
                       );
                       return;
                     }
+                    // Create tournament model
                     final tournament = Tournament(
                       id: -1,
                       enteredTeams: _selectedTeams,
@@ -259,8 +263,7 @@ class _CreateTournamentState extends State<CreateTournament> {
                     // Create tournament entry
                     // Create all of the prizes entries
                     // Create all of the teams entries
-                    final createdTournament = await GlobalConfig.connection
-                        ?.createTournament(tournament);
+                    await GlobalConfig.connection?.createTournament(tournament);
                   }
                 },
                 child: const Text('Create tournament'),

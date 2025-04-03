@@ -23,6 +23,11 @@ class TextConnection extends DataConnection {
   static const _MATCHUP_ENTRIES_FILE = 'MatchupEntries.csv';
   static const _TEAMS_FILE = 'Teams.csv';
   static const _TOURNAMENTS_FILE = 'Tournaments.csv';
+  static const _PEOPLE_COL_NAMES =
+      'id, first name, last name, email address, phone number';
+  static const _PRIZES_COL_NAMES =
+      'id, place number, place name, amount, percentage';
+  static const _TEAMS_COL_NAMES = 'id, team name, member ids';
 
   // UTILITY
   Future<void> createDirectory() async {
@@ -45,7 +50,7 @@ class TextConnection extends DataConnection {
       return <String>[];
     }
     var lines = await file.readAsLines();
-    return lines;
+    return lines.skip(1).toList();
   }
 
   Future<void> _writeLines(String fileName, List<String> lines) async {
@@ -226,17 +231,15 @@ class TextConnection extends DataConnection {
     List<T> items,
     int Function(T item) idSelector,
   ) {
-    if (items.isEmpty) {
-      return '';
-    }
+    if (items.isEmpty) return '';
 
-    var idsString = '';
+    var ids = '';
     for (var item in items) {
-      idsString += '${idSelector(item)}|';
+      ids += '${idSelector(item)}|';
     }
 
     // Removes last pipe from the string
-    return idsString.substring(0, idsString.length - 1);
+    return ids.substring(0, ids.length - 1);
   }
 
   Future<List<Matchup>> _convertToMatchups(List<String> lines) async {
@@ -462,53 +465,49 @@ class TextConnection extends DataConnection {
   }
 
   Future<void> _writeToPeopleFile(List<Person> people) async {
+    // id, first name, last name, email address, phone number
     final lines = <String>[];
+    lines.add(_PEOPLE_COL_NAMES);
 
     for (var person in people) {
       lines.add('${person.id},${person.firstName},${person.lastName},'
           '${person.emailAddress},${person.phoneNumber}');
     }
 
-    var peopleFile = File(await _getFilePath(_PEOPLE_FILE));
-    var sink = peopleFile.openWrite();
-    for (var line in lines) {
-      sink.writeln(line);
-    }
-    await sink.flush();
-    await sink.close();
+    await _writeLines(_PEOPLE_FILE, lines);
   }
 
   Future<void> _writeToPrizesFile(List<Prize> prizes) async {
+    // id, place number, place name, amount, percentage
     final lines = <String>[];
+    lines.add(_PRIZES_COL_NAMES);
+
     for (var prize in prizes) {
       lines.add(
           '${prize.id},${prize.placeNumber},${prize.placeName},${prize.amount},'
           '${prize.percentage}');
     }
 
-    var prizesFile = File(await _getFilePath(_PRIZES_FILE));
-    var sink = prizesFile.openWrite();
-    for (var line in lines) {
-      sink.writeln(line);
-    }
-    await sink.flush();
-    await sink.close();
+    await _writeLines(_PRIZES_FILE, lines);
   }
 
   Future<void> _writeToTeamsFile(List<Team> teams) async {
+    // id, name, member ids
     final lines = <String>[];
+    lines.add(_TEAMS_COL_NAMES);
+
     for (var team in teams) {
       final memberIds = _convertIdsToString(teams, (item) => item.id);
       lines.add('${team.id},${team.name},$memberIds');
     }
-    _writeLines(_TEAMS_FILE, lines);
+
+    await _writeLines(_TEAMS_FILE, lines);
   }
 
   Future<void> _writeToTournamentsFile(List<Tournament> tournaments) async {
-    // id,name,fee,team ids,prize ids,round ids
-    // example: 1,Basketball,100,1|2|7,4|9,1^2^3|4^5^6|7^8^9
-    final lines = <String>[];
+    // id, tournament name, entry fee, team ids, prize ids, matchup ids
     // TODO: Remove logs
+    final lines = <String>[];
     for (var tournament in tournaments) {
       final teamIds = _convertIdsToString(
         tournament.enteredTeams,
@@ -532,7 +531,7 @@ class TextConnection extends DataConnection {
         for (var matchup in round) {
           matchupIds += '${matchup.id}^';
         }
-        // Removes last carrot from the string
+        // Removes last caret from the string
         matchupIds = matchupIds.substring(0, matchupIds.length - 1);
         roundIds += '$matchupIds|';
       }
@@ -541,6 +540,6 @@ class TextConnection extends DataConnection {
           '${tournament.id},${tournament.name},${tournament.entryFee},$teamIds,'
           '$prizeIds,$roundIds');
     }
-    _writeLines(_TOURNAMENTS_FILE, lines);
+    await _writeLines(_TOURNAMENTS_FILE, lines);
   }
 }

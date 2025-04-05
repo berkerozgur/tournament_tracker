@@ -93,6 +93,7 @@ class _CreateTeamState extends State<CreateTeam> {
                               border: OutlineInputBorder(),
                             ),
                             validator: (value) {
+                              // TODO: Do not let people put comma in team name
                               if (value != null) {
                                 if (_teamName.text.isEmpty) {
                                   return 'Please enter a team name';
@@ -158,13 +159,9 @@ class _CreateTeamState extends State<CreateTeam> {
 
                     final createdTeam =
                         await GlobalConfig.connection?.createTeam(team);
-
+                    dev.log(createdTeam.toString());
                     if (!mounted) return;
                     Navigator.pop(context, createdTeam);
-                    // scaffoldMessenger.showSnackBar(
-                    //   SnackBar(content: Text(createdTeam.toString())),
-                    // );
-                    dev.log(createdTeam.toString());
                   }
                 },
                 child: const Text('Create team'),

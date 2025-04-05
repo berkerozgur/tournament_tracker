@@ -147,10 +147,8 @@ class _AddNewMemberContainerState extends State<AddNewMemberContainer> {
 
                       final createdPerson =
                           await GlobalConfig.connection?.createPerson(person);
-
-                      widget.onMemberAdded(createdPerson!);
-
                       dev.log(createdPerson.toString());
+                      widget.onMemberAdded(createdPerson!);
 
                       _email.clear();
                       _firstName.clear();

@@ -44,6 +44,13 @@ class _CreatePrizeState extends State<CreatePrize> {
     super.dispose();
   }
 
+  void _clearFields() {
+    _amount.clear();
+    _percentage.clear();
+    _placeName.clear();
+    _placeNumber.clear();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -177,8 +184,7 @@ class _CreatePrizeState extends State<CreatePrize> {
                 FilledButton(
                   onPressed: () async {
                     if (_formKey.currentState?.validate() ?? false) {
-                      final scaffoldMessenger = ScaffoldMessenger.of(context);
-                      var prize = Prize.fromStrings(
+                      final prize = Prize.fromStrings(
                         id: '-1',
                         amount: _amount.text,
                         percentage: _percentage.text,
@@ -187,17 +193,10 @@ class _CreatePrizeState extends State<CreatePrize> {
                       );
                       final createdPrize =
                           await GlobalConfig.connection?.createPrize(prize);
-                      if (!mounted) return;
 
-                      scaffoldMessenger.showSnackBar(
-                        SnackBar(content: Text('Prize: $createdPrize')),
-                      );
-                      // TODO: remove later
-                      dev.log(prize.toString());
-                      _amount.clear();
-                      _percentage.clear();
-                      _placeName.clear();
-                      _placeNumber.clear();
+                      dev.log(createdPrize.toString());
+
+                      _clearFields();
                     }
                   },
                   child: const Text('Create prize'),

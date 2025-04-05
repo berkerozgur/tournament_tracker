@@ -3,20 +3,19 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
-import 'data_access/text_connection_helper.dart';
+import 'data_access/text_connection.dart';
 import 'global_config.dart';
 import 'models/team.dart';
 import 'views/create_prize.dart';
 import 'views/create_team.dart';
 import 'views/create_tournament.dart';
 import 'views/tournament_dashboard.dart';
-import 'views/tournament_viewer.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // create text data directory
-  TextConnectionHelper.createDirectory();
+  await TextConnection().createDirectory();
   // init db connection
   GlobalConfig.initConnection(DbType.textFile);
 
@@ -73,17 +72,17 @@ class InitialView extends StatelessWidget {
       ),
       body: Column(
         children: [
-          TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const TournamentViewer(),
-                ),
-              );
-            },
-            child: const Text('Tournament Viewer'),
-          ),
+          // TextButton(
+          //   onPressed: () {
+          //     Navigator.push(
+          //       context,
+          //       MaterialPageRoute(
+          //         builder: (context) => const TournamentViewer(),
+          //       ),
+          //     );
+          //   },
+          //   child: const Text('Tournament Viewer'),
+          // ),
           TextButton(
             onPressed: () {
               Navigator.push(

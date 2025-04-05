@@ -1,6 +1,4 @@
 // ignore_for_file: constant_identifier_names
-
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:decimal/decimal.dart';
@@ -17,17 +15,22 @@ import '../models/tournament.dart';
 import 'data_connection.dart';
 
 class TextConnection extends DataConnection {
-  static const _PEOPLE_FILE = 'People.csv';
-  static const _PRIZES_FILE = 'Prizes.csv';
   static const _MATCHUPS_FILE = 'Matchups.csv';
   static const _MATCHUP_ENTRIES_FILE = 'MatchupEntries.csv';
+  static const _PEOPLE_FILE = 'People.csv';
+  static const _PRIZES_FILE = 'Prizes.csv';
   static const _TEAMS_FILE = 'Teams.csv';
   static const _TOURNAMENTS_FILE = 'Tournaments.csv';
+  static const _MATCHUPS_COL_NAMES = 'id, entry ids, winner id, round';
+  static const _MATCHUP_ENTRIES_COL_NAMES =
+      'id, team competing id, score, parent matchup id';
   static const _PEOPLE_COL_NAMES =
       'id, first name, last name, email address, phone number';
   static const _PRIZES_COL_NAMES =
       'id, place number, place name, amount, percentage';
   static const _TEAMS_COL_NAMES = 'id, team name, member ids';
+  static const _TOURNAMENTS_COL_NAMES =
+      'id, tournament name, entry fee, team ids, prize ids, matchup ids';
 
   // UTILITY
   Future<void> createDirectory() async {
@@ -228,22 +231,34 @@ class TextConnection extends DataConnection {
 
   // CONVERT
   String _convertIdsToString<T>(
-    List<T> items,
-    int Function(T item) idSelector,
-  ) {
+    List<T> items, [
+    int Function(T item)? idSelector,
+  ]) {
     if (items.isEmpty) return '';
 
     var ids = '';
     for (var item in items) {
-      ids += '${idSelector(item)}|';
+      if (item is List<Matchup>) {
+        var matchupIds = '';
+        for (var matchup in item) {
+          matchupIds += '${matchup.id}^';
+        }
+        // Remove last caret if needed
+        if (matchupIds.isNotEmpty) {
+          matchupIds = matchupIds.substring(0, matchupIds.length - 1);
+        }
+        ids += '$matchupIds|';
+      } else {
+        if (idSelector != null) ids += '${idSelector(item)}|';
+      }
     }
 
-    // Removes last pipe from the string
-    return ids.substring(0, ids.length - 1);
+    // Remove last pipe if needed
+    return ids.isNotEmpty ? ids.substring(0, ids.length - 1) : '';
   }
 
   Future<List<Matchup>> _convertToMatchups(List<String> lines) async {
-    // id,entries separated by pipe,winner id,round
+    // id, entry ids, winner id, round
     final matchups = <Matchup>[];
     for (var line in lines) {
       final cols = line.split(',');
@@ -261,7 +276,7 @@ class TextConnection extends DataConnection {
   Future<List<MatchupEntry>> _convertToMatchupEntries(
     List<String> lines,
   ) async {
-    // id,team competing,score,parent matchup
+    // id, team competing id, score, parent matchup id
     final entries = <MatchupEntry>[];
     for (var line in lines) {
       final cols = line.split(',');
@@ -277,6 +292,7 @@ class TextConnection extends DataConnection {
   }
 
   List<Person> _convertToPeople(List<String> lines) {
+    // id, first name, last name, email address, phone number
     final people = <Person>[];
     for (var line in lines) {
       final cols = line.split(',');
@@ -293,6 +309,7 @@ class TextConnection extends DataConnection {
   }
 
   List<Prize> _convertToPrizes(List<String> lines) {
+    // id, place number, place name, amount, percentage
     final prizes = <Prize>[];
     for (var line in lines) {
       final cols = line.split(',');
@@ -309,18 +326,17 @@ class TextConnection extends DataConnection {
   }
 
   Future<List<Team>> _convertToTeams(List<String> lines) async {
-    // id,team name,ids separated by pipe
-    // example: 17,FooBarBaz,19|41|53
+    // id, team name, member ids
     final teams = <Team>[];
-    if (lines.isEmpty) return teams;
     final people = await getAllPeople();
     for (var line in lines) {
       var teamMembers = <Person>[];
       final cols = line.split(',');
       final memberIds = cols[2].split('|');
       for (var id in memberIds) {
-        teamMembers
-            .add(people.where((person) => person.id == int.parse(id)).first);
+        teamMembers.add(
+          people.firstWhere((person) => person.id == int.parse(id)),
+        );
       }
       final team = Team(
         id: int.parse(cols[0]),
@@ -333,8 +349,7 @@ class TextConnection extends DataConnection {
   }
 
   Future<List<Tournament>> _convertToTournaments(List<String> lines) async {
-    // id,name,fee,team ids,prize ids,round ids
-    // example: 1,Basketball,100,1|2|7,4|9,1^2^3|4^5^6|7^8^9
+    // id, tournament name, entry fee, team ids, prize ids, matchup ids
     final tournaments = <Tournament>[];
     final teams = await getAllTeams();
     final prizes = await getAllPrizes();
@@ -346,15 +361,16 @@ class TextConnection extends DataConnection {
       var enteredTeams = <Team>[];
       final teamIds = cols[3].split('|');
       for (var id in teamIds) {
-        enteredTeams = teams.where((team) => team.id == int.parse(id)).toList();
+        enteredTeams.add(teams.firstWhere((team) => team.id == int.parse(id)));
       }
 
       var tournamentPrizes = <Prize>[];
       if (cols[4].isNotEmpty) {
         final prizeIds = cols[4].split('|');
         for (var id in prizeIds) {
-          tournamentPrizes =
-              prizes.where((prize) => prize.id == int.parse(id)).toList();
+          tournamentPrizes.add(
+            prizes.firstWhere((prize) => prize.id == int.parse(id)),
+          );
         }
       }
 
@@ -416,14 +432,16 @@ class TextConnection extends DataConnection {
     matchup.id = currentId;
     matchups.add(matchup);
 
+    // populate matchup entries
     for (var entry in matchup.entries) {
       await _writeToMatchupEntriesFile(entry);
     }
 
-    // save to file
+    // write to file
+    // id, entry ids, winner id, round
     final lines = <String>[];
+    lines.add(_MATCHUPS_COL_NAMES);
     for (var matchup in matchups) {
-      // id,entry ids separated by pipe,winner id,round
       final entryIds = _convertIdsToString(
         matchup.entries,
         (matchup) => matchup.id,
@@ -434,7 +452,8 @@ class TextConnection extends DataConnection {
       }
       lines.add('${matchup.id},$entryIds,$winnerId,${matchup.round}');
     }
-    _writeLines(_MATCHUPS_FILE, lines);
+
+    await _writeLines(_MATCHUPS_FILE, lines);
   }
 
   Future<void> _writeToMatchupEntriesFile(MatchupEntry entry) async {
@@ -448,8 +467,9 @@ class TextConnection extends DataConnection {
     entry.id = currentId;
     entries.add(entry);
 
+    // id, team competing id, score, parent matchup id
     final lines = <String>[];
-    // id,team competing id,score,parent matchup id
+    lines.add(_MATCHUP_ENTRIES_COL_NAMES);
     for (var entry in entries) {
       var parentId = 'null';
       if (entry.parent != null) {
@@ -461,7 +481,7 @@ class TextConnection extends DataConnection {
       }
       lines.add('${entry.id},$competingId,${entry.score},$parentId');
     }
-    _writeLines(_MATCHUP_ENTRIES_FILE, lines);
+    await _writeLines(_MATCHUP_ENTRIES_FILE, lines);
   }
 
   Future<void> _writeToPeopleFile(List<Person> people) async {
@@ -492,12 +512,13 @@ class TextConnection extends DataConnection {
   }
 
   Future<void> _writeToTeamsFile(List<Team> teams) async {
-    // id, name, member ids
+    // id, team name, member ids
     final lines = <String>[];
     lines.add(_TEAMS_COL_NAMES);
 
     for (var team in teams) {
-      final memberIds = _convertIdsToString(teams, (item) => item.id);
+      final memberIds =
+          _convertIdsToString(team.members, (person) => person.id);
       lines.add('${team.id},${team.name},$memberIds');
     }
 
@@ -506,8 +527,9 @@ class TextConnection extends DataConnection {
 
   Future<void> _writeToTournamentsFile(List<Tournament> tournaments) async {
     // id, tournament name, entry fee, team ids, prize ids, matchup ids
-    // TODO: Remove logs
     final lines = <String>[];
+    lines.add(_TOURNAMENTS_COL_NAMES);
+
     for (var tournament in tournaments) {
       final teamIds = _convertIdsToString(
         tournament.enteredTeams,
@@ -517,28 +539,10 @@ class TextConnection extends DataConnection {
         tournament.prizes,
         (prize) => prize.id,
       );
-      var roundIds = '';
-      if (tournament.rounds.isEmpty) {
-        log('rounds is empty');
-        return;
-      }
-      for (var round in tournament.rounds) {
-        var matchupIds = '';
-        if (round.isEmpty) {
-          log('round is empty');
-          return;
-        }
-        for (var matchup in round) {
-          matchupIds += '${matchup.id}^';
-        }
-        // Removes last caret from the string
-        matchupIds = matchupIds.substring(0, matchupIds.length - 1);
-        roundIds += '$matchupIds|';
-      }
-      roundIds = roundIds.substring(0, roundIds.length - 1);
+      final matchupIds = _convertIdsToString(tournament.rounds);
       lines.add(
           '${tournament.id},${tournament.name},${tournament.entryFee},$teamIds,'
-          '$prizeIds,$roundIds');
+          '$prizeIds,$matchupIds');
     }
     await _writeLines(_TOURNAMENTS_FILE, lines);
   }

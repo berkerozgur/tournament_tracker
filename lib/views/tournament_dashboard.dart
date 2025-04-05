@@ -1,7 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:tournament_tracker/views/create_tournament.dart';
+import 'package:tournament_tracker/views/tournament_viewer.dart';
 
-class TournamentDashboard extends StatelessWidget {
+import '../global_config.dart';
+import '../models/tournament.dart';
+
+class TournamentDashboard extends StatefulWidget {
   const TournamentDashboard({super.key});
+
+  @override
+  State<TournamentDashboard> createState() => _TournamentDashboardState();
+}
+
+class _TournamentDashboardState extends State<TournamentDashboard> {
+  var _tournaments = <Tournament>[];
+  Tournament? _selectedTournament;
+
+  Future<void> _getAllTournaments() async {
+    final tournaments = await GlobalConfig.connection!.getAllTournaments();
+    setState(() {
+      _tournaments = tournaments;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _getAllTournaments();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,24 +40,47 @@ class TournamentDashboard extends StatelessWidget {
         padding: const EdgeInsets.all(8.0),
         child: Column(
           children: [
-            const DropdownMenu(
-              dropdownMenuEntries: [
-                DropdownMenuEntry<String>(
-                  value: 'foo',
-                  label: 'foo',
-                ),
-              ],
-              label: Text('Load existing tournament'),
+            DropdownMenu(
+              dropdownMenuEntries: _tournaments
+                  .map(
+                    (tournament) => DropdownMenuEntry(
+                      value: tournament,
+                      label: tournament.name,
+                    ),
+                  )
+                  .toList(),
+              label: const Text('Load existing tournament'),
+              onSelected: (value) {
+                setState(() {
+                  if (value != null) _selectedTournament = value;
+                });
+              },
               width: 136.6 * 2,
             ),
             const SizedBox(height: 13.6),
             FilledButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    // TODO: Prevent users from passing a null value
+                    builder: (context) =>
+                        TournamentViewer(tournament: _selectedTournament!),
+                  ),
+                );
+              },
               child: const Text('Load tournament'),
             ),
             const SizedBox(height: 13.6),
             FilledButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CreateTournament(),
+                  ),
+                );
+              },
               child: const Text('Create tournament'),
             ),
           ],

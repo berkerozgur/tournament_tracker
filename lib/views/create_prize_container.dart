@@ -180,12 +180,9 @@ class _CreatePrizeContainerState extends State<CreatePrizeContainer> {
                     );
                     final createdPrize =
                         await GlobalConfig.connection?.createPrize(prize);
-
+                    dev.log(createdPrize.toString());
                     if (!mounted) return;
                     Navigator.of(context).pop(createdPrize);
-
-                    // TODO: remove later
-                    dev.log(prize.toString());
                   }
                 },
                 child: const Text('Create prize'),

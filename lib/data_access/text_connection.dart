@@ -282,7 +282,7 @@ class TextConnection extends DataConnection {
       final cols = line.split(',');
       final entry = MatchupEntry(
         id: int.parse(cols[0]),
-        competing: await _getTeamById(int.tryParse(cols[1])),
+        teamCompeting: await _getTeamById(int.tryParse(cols[1])),
         parent: await _getMatchupById(int.tryParse(cols[3])),
         score: double.tryParse(cols[2]),
       );
@@ -476,8 +476,8 @@ class TextConnection extends DataConnection {
         parentId = entry.parent!.id.toString();
       }
       var competingId = 'null';
-      if (entry.competing != null) {
-        competingId = entry.competing!.id.toString();
+      if (entry.teamCompeting != null) {
+        competingId = entry.teamCompeting!.id.toString();
       }
       lines.add('${entry.id},$competingId,${entry.score},$parentId');
     }

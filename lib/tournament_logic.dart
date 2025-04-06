@@ -29,7 +29,7 @@ class TournamentLogic {
     var currMatchup = Matchup.empty();
 
     for (var team in teams) {
-      currMatchup.entries.add(MatchupEntry(id: -1, competing: team));
+      currMatchup.entries.add(MatchupEntry(id: -1, teamCompeting: team));
       if (byes > 0 || currMatchup.entries.length > 1) {
         currMatchup.round = 1;
         firstRound.add(currMatchup);

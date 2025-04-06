@@ -3,18 +3,18 @@ import 'team.dart';
 
 class MatchupEntry {
   int id;
-  final Team? competing;
+  final Team? teamCompeting;
   final Matchup? parent;
   final double? score;
 
   MatchupEntry({
     required this.id,
-    this.competing,
+    this.teamCompeting,
     this.parent,
     this.score,
   });
 
   @override
-  String toString() => 'MatchupEntry(id: $id, competing: $competing, '
+  String toString() => 'MatchupEntry(id: $id, competing: $teamCompeting, '
       'parent: $parent, score: $score)';
 }

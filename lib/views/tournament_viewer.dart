@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../models/matchup.dart';
 import '../models/tournament.dart';
 
 class TournamentViewer extends StatefulWidget {
@@ -13,6 +14,8 @@ class TournamentViewer extends StatefulWidget {
 
 class _TournamentViewerState extends State<TournamentViewer> {
   var rounds = <int>[];
+  var selectedMatchups = <Matchup>[];
+  // int? selectedRound;
 
   void loadRounds() {
     rounds = [];
@@ -23,6 +26,16 @@ class _TournamentViewerState extends State<TournamentViewer> {
       if (matchups.first.round > currRound) {
         currRound = matchups.first.round;
         rounds.add(currRound);
+      }
+    }
+  }
+
+  void loadMatchups(int? selectedRound) {
+    for (var matchups in widget.tournament.rounds) {
+      if (matchups.first.round == selectedRound) {
+        setState(() {
+          selectedMatchups = matchups;
+        });
       }
     }
   }
@@ -44,27 +57,52 @@ class _TournamentViewerState extends State<TournamentViewer> {
         padding: const EdgeInsets.all(8.0),
         child: Row(
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                DropdownMenu(
-                  dropdownMenuEntries: rounds
-                      .map(
-                        (round) => DropdownMenuEntry(
-                          value: round,
-                          label: round.toString(),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  DropdownMenu(
+                    dropdownMenuEntries: rounds
+                        .map(
+                          (round) => DropdownMenuEntry(
+                            value: round,
+                            label: round.toString(),
+                          ),
+                        )
+                        .toList(),
+                    label: const Text('Round'),
+                    onSelected: (value) {
+                      // setState(() {
+                      //   selectedRound = value;
+                      // });
+                      loadMatchups(value);
+                    },
+                    width: 136.6,
+                  ),
+                  const SizedBox(height: 13.6),
+                  const LabeledCheckbox(label: 'Unplayed only'),
+                  const SizedBox(height: 13.6),
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.outline,
                         ),
-                      )
-                      .toList(),
-                  label: const Text('Round'),
-                  width: 136.6,
-                ),
-                const SizedBox(height: 13.6),
-                const LabeledCheckbox(label: 'Unplayed only'),
-                const SizedBox(height: 13.6),
-                // SelectedObjectsList will take this ones place
-                // Expanded(child: BorderedListView()),
-              ],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: ListView.builder(
+                        itemCount: selectedMatchups.length,
+                        itemBuilder: (context, index) {
+                          final matchup = selectedMatchups[index];
+                          return ListTile(
+                            title: Text(matchup.displayName),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
             Expanded(
               child: Column(

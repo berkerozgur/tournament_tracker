@@ -13,37 +13,88 @@ class TournamentViewer extends StatefulWidget {
 }
 
 class _TournamentViewerState extends State<TournamentViewer> {
-  var rounds = <int>[];
-  var selectedMatchups = <Matchup>[];
-  // int? selectedRound;
+  late final TextEditingController _teamOneController;
+  late final TextEditingController _teamTwoController;
+  final _rounds = <int>[];
+  var _selectedIdx = 0;
+  var _selectedMatchups = <Matchup>[];
+  var _teamOneName = '';
+  var _teamTwoName = '';
 
-  void loadRounds() {
-    rounds = [];
-    rounds.add(1);
-    var currRound = 1;
+  void _loadMatchup(Matchup matchup) {
+    for (var i = 0; i < matchup.entries.length; i++) {
+      if (i == 0) {
+        if (matchup.entries[0].teamCompeting != null) {
+          setState(() {
+            _teamOneName = matchup.entries[0].teamCompeting!.name;
+            _teamOneController.text = matchup.entries[0].score == null
+                ? '0'
+                : matchup.entries[0].score.toString();
 
-    for (var matchups in widget.tournament.rounds) {
-      if (matchups.first.round > currRound) {
-        currRound = matchups.first.round;
-        rounds.add(currRound);
+            _teamTwoName = '<bye>';
+            _teamTwoController.text = '0';
+          });
+        } else {
+          setState(() {
+            _teamOneName = 'Not yet set';
+          });
+        }
+      }
+      if (i == 1) {
+        if (matchup.entries[1].teamCompeting != null) {
+          setState(() {
+            _teamTwoName = matchup.entries[1].teamCompeting!.name;
+            _teamTwoController.text = matchup.entries[1].score == null
+                ? '0'
+                : matchup.entries[1].score.toString();
+          });
+        } else {
+          setState(() {
+            _teamTwoName = 'Not yet set';
+          });
+        }
       }
     }
   }
 
-  void loadMatchups(int? selectedRound) {
+  void _loadMatchups(int? selectedRound) {
     for (var matchups in widget.tournament.rounds) {
       if (matchups.first.round == selectedRound) {
         setState(() {
-          selectedMatchups = matchups;
+          _selectedMatchups = matchups;
         });
       }
     }
   }
 
+  void _loadRounds() {
+    _rounds.clear();
+    _rounds.add(1);
+    var currRound = 1;
+
+    for (var matchups in widget.tournament.rounds) {
+      if (matchups.first.round > currRound) {
+        currRound = matchups.first.round;
+        _rounds.add(currRound);
+      }
+    }
+
+    _loadMatchups(1);
+  }
+
   @override
   void initState() {
     super.initState();
-    loadRounds();
+    _teamOneController = TextEditingController();
+    _teamTwoController = TextEditingController();
+    _loadRounds();
+  }
+
+  @override
+  void dispose() {
+    _teamOneController.dispose();
+    _teamTwoController.dispose();
+    super.dispose();
   }
 
   @override
@@ -62,7 +113,8 @@ class _TournamentViewerState extends State<TournamentViewer> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   DropdownMenu(
-                    dropdownMenuEntries: rounds
+                    initialSelection: _rounds.first,
+                    dropdownMenuEntries: _rounds
                         .map(
                           (round) => DropdownMenuEntry(
                             value: round,
@@ -72,10 +124,7 @@ class _TournamentViewerState extends State<TournamentViewer> {
                         .toList(),
                     label: const Text('Round'),
                     onSelected: (value) {
-                      // setState(() {
-                      //   selectedRound = value;
-                      // });
-                      loadMatchups(value);
+                      _loadMatchups(value);
                     },
                     width: 136.6,
                   ),
@@ -91,13 +140,21 @@ class _TournamentViewerState extends State<TournamentViewer> {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: ListView.builder(
-                        itemCount: selectedMatchups.length,
                         itemBuilder: (context, index) {
-                          final matchup = selectedMatchups[index];
+                          final matchup = _selectedMatchups[index];
+                          // TODO: should load team names and scores when view first loaded without tapping tile but how?
                           return ListTile(
+                            onTap: () {
+                              setState(() {
+                                _selectedIdx = index;
+                              });
+                              _loadMatchup(matchup);
+                            },
+                            selected: index == _selectedIdx,
                             title: Text(matchup.displayName),
                           );
                         },
+                        itemCount: _selectedMatchups.length,
                       ),
                     ),
                   ),
@@ -110,8 +167,9 @@ class _TournamentViewerState extends State<TournamentViewer> {
                   SizedBox(
                     width: 136.6 * 2,
                     child: TextFormField(
-                      decoration: const InputDecoration(
-                        label: Text('Team one score'),
+                      controller: _teamOneController,
+                      decoration: InputDecoration(
+                        label: Text('$_teamOneName score'),
                       ),
                     ),
                   ),
@@ -119,8 +177,9 @@ class _TournamentViewerState extends State<TournamentViewer> {
                   SizedBox(
                     width: 136.6 * 2,
                     child: TextFormField(
-                      decoration: const InputDecoration(
-                        label: Text('Team two score'),
+                      controller: _teamTwoController,
+                      decoration: InputDecoration(
+                        label: Text('$_teamTwoName score'),
                       ),
                     ),
                   ),

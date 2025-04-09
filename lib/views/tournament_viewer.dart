@@ -13,11 +13,14 @@ class TournamentViewer extends StatefulWidget {
 }
 
 class _TournamentViewerState extends State<TournamentViewer> {
+  final _rounds = <int>[];
+  final _selectedMatchups = <Matchup>[];
   late final TextEditingController _teamOneController;
   late final TextEditingController _teamTwoController;
-  final _rounds = <int>[];
+  var _isChecked = false;
   var _selectedIdx = 0;
-  var _selectedMatchups = <Matchup>[];
+  late Matchup _selectedMatchup;
+  var _selectedRound = 1;
   var _teamOneName = '';
   var _teamTwoName = '';
 
@@ -61,14 +64,22 @@ class _TournamentViewerState extends State<TournamentViewer> {
     for (var matchups in widget.tournament.rounds) {
       if (matchups.first.round == selectedRound) {
         setState(() {
-          _selectedMatchups = matchups;
+          _selectedMatchups.clear();
         });
+        for (var matchup in matchups) {
+          if (matchup.winner == null || !_isChecked) {
+            setState(() {
+              _selectedMatchups.add(matchup);
+            });
+          }
+        }
       }
     }
+    if (_selectedMatchups.isNotEmpty) _loadMatchup(_selectedMatchups.first);
   }
 
   void _loadRounds() {
-    _rounds.clear();
+    // _rounds.clear();
     _rounds.add(1);
     var currRound = 1;
 
@@ -88,6 +99,7 @@ class _TournamentViewerState extends State<TournamentViewer> {
     _teamOneController = TextEditingController();
     _teamTwoController = TextEditingController();
     _loadRounds();
+    _selectedMatchup = _selectedMatchups.first;
   }
 
   @override
@@ -95,6 +107,63 @@ class _TournamentViewerState extends State<TournamentViewer> {
     _teamOneController.dispose();
     _teamTwoController.dispose();
     super.dispose();
+  }
+
+  void _scoreOnPressed() {
+    final entries = _selectedMatchup.entries;
+    double? teamOneScore;
+    double? teamTwoScore;
+    for (var i = 0; i < entries.length; i++) {
+      if (i == 0) {
+        if (entries[0].teamCompeting != null) {
+          teamOneScore = double.tryParse(_teamOneController.text);
+          if (teamOneScore == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Please enter a valid score'),
+              ),
+            );
+            return;
+          }
+          setState(() {
+            entries[0].score = teamOneScore;
+          });
+        }
+      }
+      if (i == 1) {
+        if (entries[1].teamCompeting != null) {
+          teamTwoScore = double.tryParse(_teamTwoController.text);
+          if (teamTwoScore == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Please enter a valid score'),
+              ),
+            );
+            return;
+          }
+          setState(() {
+            entries[1].score = teamTwoScore;
+          });
+        }
+      }
+    }
+    // High score wins
+    if (teamOneScore! > teamTwoScore!) {
+      // Team one wins
+      setState(() {
+        _selectedMatchup.winner = entries[0].teamCompeting;
+      });
+    } else if (teamTwoScore > teamOneScore) {
+      setState(() {
+        _selectedMatchup.winner = entries[1].teamCompeting;
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Single-elimination does not handle ties'),
+        ),
+      );
+    }
   }
 
   @override
@@ -112,6 +181,8 @@ class _TournamentViewerState extends State<TournamentViewer> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // TODO: selected index in listview should reset to 1 when rounds changed
+                  // Rounds dropdown
                   DropdownMenu(
                     initialSelection: _rounds.first,
                     dropdownMenuEntries: _rounds
@@ -124,13 +195,27 @@ class _TournamentViewerState extends State<TournamentViewer> {
                         .toList(),
                     label: const Text('Round'),
                     onSelected: (value) {
+                      setState(() {
+                        _selectedRound = value!;
+                      });
                       _loadMatchups(value);
                     },
                     width: 136.6,
                   ),
                   const SizedBox(height: 13.6),
-                  const LabeledCheckbox(label: 'Unplayed only'),
+                  // Unplayed only checkbox
+                  LabeledCheckbox(
+                    label: 'Unplayed only',
+                    onChanged: (value) {
+                      setState(() {
+                        _isChecked = value;
+                      });
+                      _loadMatchups(_selectedRound);
+                    },
+                    value: _isChecked,
+                  ),
                   const SizedBox(height: 13.6),
+                  // Matchups ListView
                   Expanded(
                     child: Container(
                       decoration: BoxDecoration(
@@ -142,11 +227,11 @@ class _TournamentViewerState extends State<TournamentViewer> {
                       child: ListView.builder(
                         itemBuilder: (context, index) {
                           final matchup = _selectedMatchups[index];
-                          // TODO: should load team names and scores when view first loaded without tapping tile but how?
                           return ListTile(
                             onTap: () {
                               setState(() {
                                 _selectedIdx = index;
+                                _selectedMatchup = matchup;
                               });
                               _loadMatchup(matchup);
                             },
@@ -187,7 +272,7 @@ class _TournamentViewerState extends State<TournamentViewer> {
                   SizedBox(
                     width: 136.6,
                     child: FilledButton(
-                      onPressed: () {},
+                      onPressed: _scoreOnPressed,
                       child: const Text('Score'),
                     ),
                   ),
@@ -201,38 +286,36 @@ class _TournamentViewerState extends State<TournamentViewer> {
   }
 }
 
-class LabeledCheckbox extends StatefulWidget {
+class LabeledCheckbox extends StatelessWidget {
+  const LabeledCheckbox({
+    super.key,
+    required this.label,
+    required this.onChanged,
+    required this.value,
+  });
+
   final String label;
-  const LabeledCheckbox({super.key, required this.label});
-
-  @override
-  State<LabeledCheckbox> createState() => _LabeledCheckboxState();
-}
-
-class _LabeledCheckboxState extends State<LabeledCheckbox> {
-  bool _isChecked = false;
+  final ValueChanged<bool> onChanged;
+  final bool value;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Checkbox(
-          value: _isChecked,
-          onChanged: (value) {
-            setState(() {
-              _isChecked = value ?? false;
-            });
-          },
-        ),
-        GestureDetector(
-          onTap: () {
-            setState(() {
-              _isChecked = !_isChecked;
-            });
-          },
-          child: Text(widget.label),
-        ),
-      ],
+    return InkWell(
+      onTap: () {
+        onChanged(!value);
+      },
+      child: Row(
+        children: [
+          Checkbox(
+            value: value,
+            onChanged: (value) {
+              onChanged(value!);
+            },
+          ),
+          const SizedBox(width: 13.6 / 2),
+          Text(label),
+        ],
+      ),
     );
   }
 }

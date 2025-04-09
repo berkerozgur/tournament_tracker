@@ -5,7 +5,7 @@ class MatchupEntry {
   int id;
   final Team? teamCompeting;
   final Matchup? parent;
-  final double? score;
+  double? score;
 
   MatchupEntry({
     required this.id,

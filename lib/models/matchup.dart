@@ -5,7 +5,7 @@ class Matchup {
   int id;
   final List<MatchupEntry> entries;
   int round;
-  final Team? winner;
+  Team? winner;
 
   String get displayName {
     var displayName = '';

@@ -1,3 +1,4 @@
+import '../models/matchup.dart';
 import '../models/person.dart';
 import '../models/prize.dart';
 import '../models/team.dart';
@@ -19,4 +20,6 @@ abstract class DataConnection {
   Future<List<Team>> getAllTeams();
 
   Future<List<Tournament>> getAllTournaments();
+
+  Future<void> updateMatchup(Matchup matchup);
 }

@@ -3,7 +3,7 @@ import 'team.dart';
 
 class MatchupEntry {
   int id;
-  final Team? teamCompeting;
+  Team? teamCompeting;
   final Matchup? parent;
   double? score;
 

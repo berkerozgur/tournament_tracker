@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../global_config.dart';
 import '../models/matchup.dart';
 import '../models/tournament.dart';
 
@@ -18,6 +19,7 @@ class _TournamentViewerState extends State<TournamentViewer> {
   late final TextEditingController _teamOneController;
   late final TextEditingController _teamTwoController;
   var _isChecked = false;
+  var _isMatchupInfoVisible = true;
   var _selectedIdx = 0;
   late Matchup _selectedMatchup;
   var _selectedRound = 1;
@@ -75,7 +77,16 @@ class _TournamentViewerState extends State<TournamentViewer> {
         }
       }
     }
+
     if (_selectedMatchups.isNotEmpty) _loadMatchup(_selectedMatchups.first);
+
+    // _displayMatchupInfo();
+  }
+
+  void _displayMatchupInfo() {
+    setState(() {
+      _isMatchupInfoVisible = _selectedMatchups.isNotEmpty;
+    });
   }
 
   void _loadRounds() {
@@ -91,22 +102,6 @@ class _TournamentViewerState extends State<TournamentViewer> {
     }
 
     _loadMatchups(1);
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _teamOneController = TextEditingController();
-    _teamTwoController = TextEditingController();
-    _loadRounds();
-    _selectedMatchup = _selectedMatchups.first;
-  }
-
-  @override
-  void dispose() {
-    _teamOneController.dispose();
-    _teamTwoController.dispose();
-    super.dispose();
   }
 
   void _scoreOnPressed() {
@@ -164,6 +159,41 @@ class _TournamentViewerState extends State<TournamentViewer> {
         ),
       );
     }
+    // TODO: fix this
+    // There is a problem on updating Matchups. Matchups file breaks after
+    // during this process
+    for (var round in widget.tournament.rounds) {
+      for (var matchup in round) {
+        for (var entry in matchup.entries) {
+          if (entry.parent != null) {
+            if (entry.parent!.id == _selectedMatchup.id) {
+              entry.teamCompeting = _selectedMatchup.winner;
+              GlobalConfig.connection?.updateMatchup(matchup);
+            }
+          }
+        }
+      }
+    }
+    // TODO: this doesn't work as expected
+    _loadMatchups(_selectedRound);
+
+    GlobalConfig.connection?.updateMatchup(_selectedMatchup);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _teamOneController = TextEditingController();
+    _teamTwoController = TextEditingController();
+    _loadRounds();
+    _selectedMatchup = _selectedMatchups.first;
+  }
+
+  @override
+  void dispose() {
+    _teamOneController.dispose();
+    _teamTwoController.dispose();
+    super.dispose();
   }
 
   @override
@@ -246,42 +276,74 @@ class _TournamentViewerState extends State<TournamentViewer> {
                 ],
               ),
             ),
+            // Matchup info container
             Expanded(
-              child: Column(
-                children: [
-                  SizedBox(
-                    width: 136.6 * 2,
-                    child: TextFormField(
-                      controller: _teamOneController,
-                      decoration: InputDecoration(
-                        label: Text('$_teamOneName score'),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 13.6),
-                  SizedBox(
-                    width: 136.6 * 2,
-                    child: TextFormField(
-                      controller: _teamTwoController,
-                      decoration: InputDecoration(
-                        label: Text('$_teamTwoName score'),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 13.6),
-                  SizedBox(
-                    width: 136.6,
-                    child: FilledButton(
-                      onPressed: _scoreOnPressed,
-                      child: const Text('Score'),
-                    ),
-                  ),
-                ],
+              child: Visibility(
+                visible: _selectedMatchups.isNotEmpty,
+                child: MatchupInfoWidget(
+                  scoreOnPressed: _scoreOnPressed,
+                  teamOneController: _teamOneController,
+                  teamTwoController: _teamTwoController,
+                  teamOneName: _teamOneName,
+                  teamTwoName: _teamTwoName,
+                ),
               ),
             )
           ],
         ),
       ),
+    );
+  }
+}
+
+class MatchupInfoWidget extends StatelessWidget {
+  final VoidCallback scoreOnPressed;
+  final TextEditingController teamOneController;
+  final TextEditingController teamTwoController;
+  final String teamOneName;
+  final String teamTwoName;
+
+  const MatchupInfoWidget({
+    super.key,
+    required this.scoreOnPressed,
+    required this.teamOneController,
+    required this.teamTwoController,
+    required this.teamOneName,
+    required this.teamTwoName,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        SizedBox(
+          width: 136.6 * 2,
+          child: TextFormField(
+            controller: teamOneController,
+            decoration: InputDecoration(
+              label: Text('$teamOneName score'),
+            ),
+          ),
+        ),
+        const SizedBox(height: 13.6),
+        SizedBox(
+          width: 136.6 * 2,
+          child: TextFormField(
+            controller: teamTwoController,
+            decoration: InputDecoration(
+              label: Text('$teamTwoName score'),
+            ),
+          ),
+        ),
+        const SizedBox(height: 13.6),
+        SizedBox(
+          width: 136.6,
+          child: FilledButton(
+            onPressed: scoreOnPressed,
+            child: const Text('Score'),
+          ),
+        ),
+      ],
     );
   }
 }

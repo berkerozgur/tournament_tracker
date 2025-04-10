@@ -229,6 +229,74 @@ class TextConnection extends DataConnection {
     return null;
   }
 
+  // UPDATE
+  @override
+  Future<void> updateMatchup(Matchup matchup) async {
+    final matchups = await _getAllMatchups();
+    Matchup? oldMatchup;
+
+    for (var m in matchups) {
+      if (m.id == matchup.id) {
+        oldMatchup = m;
+      }
+    }
+
+    matchups.remove(oldMatchup);
+    matchups.add(matchup);
+
+    for (var entry in matchup.entries) {
+      await _updateMatchupEntry(entry);
+    }
+
+    // write to file
+    // id, entry ids, winner id, round
+    final lines = <String>[];
+    lines.add(_MATCHUPS_COL_NAMES);
+    for (var matchup in matchups) {
+      final entryIds = _convertIdsToString(
+        matchup.entries,
+        (matchup) => matchup.id,
+      );
+      var winnerId = 'null';
+      if (matchup.winner != null) {
+        winnerId = matchup.winner!.id.toString();
+      }
+      lines.add('${matchup.id},$entryIds,$winnerId,${matchup.round}');
+    }
+
+    await _writeLines(_MATCHUPS_FILE, lines);
+  }
+
+  Future<void> _updateMatchupEntry(MatchupEntry entry) async {
+    final entries = await _getAllMatchupEntries();
+    MatchupEntry? oldEntry;
+
+    for (var e in entries) {
+      if (e.id == entry.id) {
+        oldEntry = e;
+      }
+    }
+
+    entries.remove(oldEntry);
+    entries.add(entry);
+
+    // id, team competing id, score, parent matchup id
+    final lines = <String>[];
+    lines.add(_MATCHUP_ENTRIES_COL_NAMES);
+    for (var entry in entries) {
+      var parentId = 'null';
+      if (entry.parent != null) {
+        parentId = entry.parent!.id.toString();
+      }
+      var competingId = 'null';
+      if (entry.teamCompeting != null) {
+        competingId = entry.teamCompeting!.id.toString();
+      }
+      lines.add('${entry.id},$competingId,${entry.score},$parentId');
+    }
+    await _writeLines(_MATCHUP_ENTRIES_FILE, lines);
+  }
+
   // CONVERT
   String _convertIdsToString<T>(
     List<T> items, [

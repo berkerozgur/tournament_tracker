@@ -1,6 +1,6 @@
 name: tournament_tracker
 description: "A new Flutter project."
-publish_to: 'none'
+publish_to: "none"
 version: 0.1.0
 
 environment:
@@ -12,6 +12,8 @@ dependencies:
     sdk: flutter
   path: ^1.9.0
   path_provider: ^2.1.5
+  # window management
+  desktop_multi_window: ^0.2.1
   window_manager: ^0.4.3
 
 dev_dependencies:

@@ -1,9 +1,10 @@
+import 'dart:convert';
+
+import 'package:desktop_multi_window/desktop_multi_window.dart' as multi_window;
 import 'package:flutter/material.dart';
 
-import '../app_routes.dart';
 import '../global_config.dart';
 import '../models/tournament.dart';
-import 'create_tournament.dart';
 
 class TournamentDashboard extends StatefulWidget {
   const TournamentDashboard({super.key});
@@ -61,24 +62,40 @@ class _TournamentDashboardState extends State<TournamentDashboard> {
             ),
             const SizedBox(height: 13.6),
             FilledButton(
-              onPressed: () {
-                Navigator.pushNamed(
-                  context,
-                  AppRoutes.tournamentViewer,
-                  arguments: _selectedTournament,
-                );
+              onPressed: () async {
+                // final window =
+                //     await multi_window.DesktopMultiWindow.createWindow(
+                //   jsonEncode(
+                //     {'view': 'create_tournament'},
+                //   ),
+                // );
+                // window
+                //   ..setFrame(const Offset(0, 0) & const Size(1366, 768))
+                //   ..center()
+                //   ..setTitle('Tournament Viewer')
+                //   ..show();
+                // Navigator.pushNamed(
+                //   context,
+                //   AppRoutes.tournamentViewer,
+                //   arguments: _selectedTournament,
+                // );
               },
               child: const Text('Load tournament'),
             ),
             const SizedBox(height: 13.6),
             FilledButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const CreateTournament(),
+              onPressed: () async {
+                final window =
+                    await multi_window.DesktopMultiWindow.createWindow(
+                  jsonEncode(
+                    {'view': 'create_tournament'},
                   ),
                 );
+                window
+                  ..setFrame(const Offset(0, 0) & const Size(1366, 768))
+                  ..center()
+                  ..setTitle('Create Tournament')
+                  ..show();
               },
               child: const Text('Create tournament'),
             ),

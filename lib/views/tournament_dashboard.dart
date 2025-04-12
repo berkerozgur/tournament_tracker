@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:tournament_tracker/views/create_tournament.dart';
-import 'package:tournament_tracker/views/tournament_viewer.dart';
 
+import '../app_routes.dart';
 import '../global_config.dart';
 import '../models/tournament.dart';
+import 'create_tournament.dart';
 
 class TournamentDashboard extends StatefulWidget {
   const TournamentDashboard({super.key});
@@ -41,6 +41,8 @@ class _TournamentDashboardState extends State<TournamentDashboard> {
         child: Column(
           children: [
             DropdownMenu(
+              initialSelection:
+                  _tournaments.isNotEmpty ? _tournaments.first : null,
               dropdownMenuEntries: _tournaments
                   .map(
                     (tournament) => DropdownMenuEntry(
@@ -60,13 +62,10 @@ class _TournamentDashboardState extends State<TournamentDashboard> {
             const SizedBox(height: 13.6),
             FilledButton(
               onPressed: () {
-                Navigator.push(
+                Navigator.pushNamed(
                   context,
-                  MaterialPageRoute(
-                    // TODO: Prevent users from passing a null value
-                    builder: (context) =>
-                        TournamentViewer(tournament: _selectedTournament!),
-                  ),
+                  AppRoutes.tournamentViewer,
+                  arguments: _selectedTournament,
                 );
               },
               child: const Text('Load tournament'),

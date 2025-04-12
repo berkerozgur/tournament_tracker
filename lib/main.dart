@@ -3,13 +3,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'app_routes.dart';
 import 'data_access/text_connection.dart';
 import 'global_config.dart';
-import 'models/team.dart';
-import 'views/create_prize.dart';
-import 'views/create_team.dart';
-import 'views/create_tournament.dart';
+import 'models/tournament.dart';
 import 'views/tournament_dashboard.dart';
+import 'views/tournament_viewer.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,92 +42,21 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      themeMode: ThemeMode.dark,
       darkTheme: ThemeData.dark(),
+      themeMode: ThemeMode.dark,
+      initialRoute: AppRoutes.home,
       onGenerateRoute: (settings) {
-        switch (settings.name) {
-          case '/create-team':
-            return MaterialPageRoute<Team>(
-              builder: (context) => const CreateTeam(),
-            );
-          default:
-            return null;
+        if (settings.name == AppRoutes.tournamentViewer) {
+          final tournament = settings.arguments as Tournament;
+          return MaterialPageRoute(
+            builder: (context) => TournamentViewer(tournament: tournament),
+          );
         }
+        return null;
       },
-      home: const InitialView(),
-    );
-  }
-}
-
-class InitialView extends StatelessWidget {
-  const InitialView({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('Initial View'),
-      ),
-      body: Column(
-        children: [
-          // TextButton(
-          //   onPressed: () {
-          //     Navigator.push(
-          //       context,
-          //       MaterialPageRoute(
-          //         builder: (context) => const TournamentViewer(),
-          //       ),
-          //     );
-          //   },
-          //   child: const Text('Tournament Viewer'),
-          // ),
-          TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const CreateTournament(),
-                ),
-              );
-            },
-            child: const Text('Create Tournament'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const CreateTeam(),
-                ),
-              );
-            },
-            child: const Text('Create Team'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const CreatePrize(),
-                ),
-              );
-            },
-            child: const Text('Create Prize'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const TournamentDashboard(),
-                ),
-              );
-            },
-            child: const Text('Tournament Dashboard'),
-          ),
-        ],
-      ),
+      routes: {
+        AppRoutes.home: (context) => const TournamentDashboard(),
+      },
     );
   }
 }

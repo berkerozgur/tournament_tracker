@@ -1,5 +1,3 @@
-import 'dart:developer' as dev;
-
 import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 
@@ -191,10 +189,8 @@ class _CreatePrizeState extends State<CreatePrize> {
                         placeName: _placeName.text,
                         placeNumber: _placeNumber.text,
                       );
-                      final createdPrize =
-                          await GlobalConfig.connection?.createPrize(prize);
 
-                      dev.log(createdPrize.toString());
+                      await GlobalConfig.connection?.createPrize(prize);
 
                       _clearFields();
                     }

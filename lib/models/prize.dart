@@ -26,6 +26,25 @@ class Prize {
         percentage = double.tryParse(percentage) ?? 0,
         placeNumber = int.parse(placeNumber);
 
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'amount': amount?.toString(),
+      'percentage': percentage,
+      'placeName': placeName,
+      'placeNumber': placeNumber,
+    };
+  }
+
+  factory Prize.fromJson(Map<String, dynamic> json) {
+    return Prize(
+      id: json['id'] as int,
+      amount: json['amount'] != null ? Decimal.tryParse(json['amount']) : null,
+      percentage: (json['percentage'] as num?)?.toDouble(),
+      placeName: json['placeName'] as String,
+      placeNumber: json['placeNumber'] as int,
+    );
+  }
   @override
   String toString() =>
       'Prize(id: $id, amount: $amount, percentage: $percentage '

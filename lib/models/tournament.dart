@@ -21,6 +21,39 @@ class Tournament {
     required this.rounds,
   });
 
+  factory Tournament.fromJson(Map<String, dynamic> json) {
+    return Tournament(
+      id: json['id'] as int,
+      enteredTeams: (json['enteredTeams'] as List<dynamic>)
+          .map((team) => Team.fromJson(team as Map<String, dynamic>))
+          .toList(),
+      entryFee: Decimal.parse(json['entryFee'] as String),
+      name: json['name'] as String,
+      prizes: (json['prizes'] as List<dynamic>)
+          .map((prize) => Prize.fromJson(prize as Map<String, dynamic>))
+          .toList(),
+      rounds: (json['rounds'] as List<dynamic>)
+          .map((round) => (round as List<dynamic>)
+              .map((matchup) =>
+                  Matchup.fromJson(matchup as Map<String, dynamic>))
+              .toList())
+          .toList(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'enteredTeams': enteredTeams.map((team) => team.toJson()).toList(),
+      'entryFee': entryFee.toString(),
+      'name': name,
+      'prizes': prizes.map((prize) => prize.toJson()).toList(),
+      'rounds': rounds
+          .map((round) => round.map((matchup) => matchup.toJson()).toList())
+          .toList(),
+    };
+  }
+
   @override
   String toString() => 'Tournament(id: $id, enteredTeams: $enteredTeams, '
       'entryFee: $entryFee, name: $name, prizes: $prizes, rounds: $rounds)';

@@ -30,6 +30,19 @@ class _TournamentDashboardState extends State<TournamentDashboard> {
     _getAllTournaments();
   }
 
+  void _openCreateTournamentView() async {
+    final window = await multi_window.DesktopMultiWindow.createWindow(
+      jsonEncode(
+        {'view': 'create_tournament'},
+      ),
+    );
+    window
+      ..setFrame(const Offset(0, 0) & const Size(1366, 768))
+      ..center()
+      ..setTitle('Create Tournament')
+      ..show();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,13 +50,12 @@ class _TournamentDashboardState extends State<TournamentDashboard> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text('Tournament Dashboard'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
+      body: Center(
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // Tournaments Dropdown
             DropdownMenu(
-              initialSelection:
-                  _tournaments.isNotEmpty ? _tournaments.first : null,
               dropdownMenuEntries: _tournaments
                   .map(
                     (tournament) => DropdownMenuEntry(
@@ -52,15 +64,18 @@ class _TournamentDashboardState extends State<TournamentDashboard> {
                     ),
                   )
                   .toList(),
+              initialSelection:
+                  _tournaments.isNotEmpty ? _tournaments.first : null,
               label: const Text('Load existing tournament'),
               onSelected: (value) {
                 setState(() {
                   if (value != null) _selectedTournament = value;
                 });
               },
-              width: 136.6 * 2,
+              width: 80 * 4,
             ),
-            const SizedBox(height: 13.6),
+            // Load tournament button
+            const SizedBox(height: 24),
             FilledButton(
               onPressed: () async {
                 // final window =
@@ -82,21 +97,10 @@ class _TournamentDashboardState extends State<TournamentDashboard> {
               },
               child: const Text('Load tournament'),
             ),
-            const SizedBox(height: 13.6),
+            const SizedBox(height: 8),
+            // Create tournament button
             FilledButton(
-              onPressed: () async {
-                final window =
-                    await multi_window.DesktopMultiWindow.createWindow(
-                  jsonEncode(
-                    {'view': 'create_tournament'},
-                  ),
-                );
-                window
-                  ..setFrame(const Offset(0, 0) & const Size(1366, 768))
-                  ..center()
-                  ..setTitle('Create Tournament')
-                  ..show();
-              },
+              onPressed: _openCreateTournamentView,
               child: const Text('Create tournament'),
             ),
           ],

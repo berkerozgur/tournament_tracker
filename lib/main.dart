@@ -1,8 +1,8 @@
 import 'dart:convert';
+import 'dart:developer' as dev;
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:tournament_tracker/app_window_manager.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'data_access/text_connection.dart';
@@ -12,19 +12,27 @@ import 'views/create_tournament.dart';
 import 'views/tournament_dashboard.dart';
 import 'views/tournament_viewer.dart';
 
-class NewWindow extends StatelessWidget {
-  final Widget home;
+void _setUpMainWindow() async {
+  runApp(const NewWindow(home: TournamentDashboard()));
 
-  const NewWindow({super.key, required this.home});
+  const windowOptions = WindowOptions(
+    center: true,
+    maximumSize: Size(533.3, 400),
+    minimumSize: Size(533.3, 400),
+    size: Size(533.3, 400),
+  );
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      darkTheme: ThemeData.dark(),
-      themeMode: ThemeMode.dark,
-      home: home,
-    );
-  }
+  await windowManager.waitUntilReadyToShow(windowOptions, () async {
+    await windowManager.show();
+    await windowManager.focus();
+  });
+}
+
+void _setupSubWindow(Widget view) async {
+  runApp(NewWindow(home: view));
+  await windowManager.setResizable(false);
+  await windowManager.setSize(const Size(1366, 768));
+  await windowManager.show();
 }
 
 void main(List<String> args) async {
@@ -34,7 +42,7 @@ void main(List<String> args) async {
   // init db connection
   GlobalConfig.initConnection(DbType.textFile);
 
-  // TODO: put this in a class named like WindowManager
+  // TODO: Separate desktop init and mobile init
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     await windowManager.ensureInitialized();
 
@@ -49,20 +57,32 @@ void main(List<String> args) async {
       switch (view) {
         case 'tournament_viewer':
           final tournament = Tournament.fromJson(argument['tournament']);
-          runApp(NewWindow(home: TournamentViewer(tournament: tournament)));
-          AppWindowManager.setupSubWindow();
+          _setupSubWindow(TournamentViewer(tournament: tournament));
           break;
         case 'create_tournament':
-          runApp(const NewWindow(home: CreateTournament()));
-          AppWindowManager.setupSubWindow();
+          _setupSubWindow(const CreateTournament());
           break;
         default:
-          print('default');
+          dev.log('Reached default case somehow');
       }
     } else {
       // This is the main window
-      runApp(const NewWindow(home: TournamentDashboard()));
-      AppWindowManager.setupMainWindow();
+      _setUpMainWindow();
     }
+  }
+}
+
+class NewWindow extends StatelessWidget {
+  final Widget home;
+
+  const NewWindow({super.key, required this.home});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      darkTheme: ThemeData.dark(),
+      themeMode: ThemeMode.dark,
+      home: home,
+    );
   }
 }

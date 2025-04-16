@@ -7,6 +7,7 @@ import 'app_routes.dart';
 import 'data_access/text_connection.dart';
 import 'global_config.dart';
 import 'models/tournament.dart';
+import 'views/create_tournament.dart';
 import 'views/tournament_dashboard.dart';
 import 'views/tournament_viewer.dart';
 
@@ -22,9 +23,7 @@ void main() async {
     await windowManager.ensureInitialized();
 
     const windowOptions = WindowOptions(
-      size: Size(1366, 768),
       minimumSize: Size(1366, 768),
-      maximumSize: Size(1366, 768),
     );
 
     windowManager.waitUntilReadyToShow(windowOptions, () async {
@@ -56,6 +55,7 @@ class MainApp extends StatelessWidget {
       },
       routes: {
         AppRoutes.home: (context) => const TournamentDashboard(),
+        AppRoutes.createTournament: (context) => const CreateTournament(),
       },
     );
   }

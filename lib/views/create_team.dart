@@ -24,7 +24,7 @@ class _CreateTeamState extends State<CreateTeam> {
   Person? _selectedMember;
 
   Future<void> _getAllPeople() async {
-    final availableMembers = await GlobalConfig.connection!.getAllPeople();
+    final availableMembers = await GlobalConfig.connection.getAllPeople();
     setState(() {
       _availableMembers = availableMembers;
     });
@@ -158,7 +158,7 @@ class _CreateTeamState extends State<CreateTeam> {
                     );
 
                     final createdTeam =
-                        await GlobalConfig.connection?.createTeam(team);
+                        await GlobalConfig.connection.createTeam(team);
                     dev.log(createdTeam.toString());
                     if (!mounted) return;
                     Navigator.pop(context, createdTeam);

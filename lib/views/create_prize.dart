@@ -190,7 +190,7 @@ class _CreatePrizeState extends State<CreatePrize> {
                         placeNumber: _placeNumber.text,
                       );
 
-                      await GlobalConfig.connection?.createPrize(prize);
+                      await GlobalConfig.connection.createPrize(prize);
 
                       _clearFields();
                     }

@@ -37,9 +37,9 @@ class _CreateTournamentState extends State<CreateTournament> {
   }
 
   Future<void> _getAllTeams() async {
-    final availableTeams = await GlobalConfig.connection?.getAllTeams();
+    final availableTeams = await GlobalConfig.connection.getAllTeams();
     setState(() {
-      _availableTeams = availableTeams!;
+      _availableTeams = availableTeams;
     });
   }
 
@@ -263,7 +263,7 @@ class _CreateTournamentState extends State<CreateTournament> {
                     // Create tournament entry
                     // Create all of the prizes entries
                     // Create all of the teams entries
-                    await GlobalConfig.connection?.createTournament(tournament);
+                    await GlobalConfig.connection.createTournament(tournament);
                   }
                 },
                 child: const Text('Create tournament'),

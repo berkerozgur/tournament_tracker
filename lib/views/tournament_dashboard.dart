@@ -30,7 +30,7 @@ class _TournamentDashboardState extends State<TournamentDashboard> {
   }
 
   Future<void> _getAllTournaments() async {
-    final tournaments = await GlobalConfig.connection!.getAllTournaments();
+    final tournaments = await GlobalConfig.connection.getAllTournaments();
     setState(() {
       _tournaments = tournaments;
       if (_tournaments.isEmpty) _isLoadTournamentEnabled = false;

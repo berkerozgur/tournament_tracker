@@ -168,7 +168,7 @@ class _TournamentViewerState extends State<TournamentViewer> {
           if (entry.parent != null) {
             if (entry.parent!.id == _selectedMatchup.id) {
               entry.teamCompeting = _selectedMatchup.winner;
-              GlobalConfig.connection?.updateMatchup(matchup);
+              GlobalConfig.connection.updateMatchup(matchup);
             }
           }
         }
@@ -177,7 +177,7 @@ class _TournamentViewerState extends State<TournamentViewer> {
     // TODO: this doesn't work as expected
     _loadMatchups(_selectedRound);
 
-    GlobalConfig.connection?.updateMatchup(_selectedMatchup);
+    GlobalConfig.connection.updateMatchup(_selectedMatchup);
   }
 
   @override

@@ -179,7 +179,7 @@ class _CreatePrizeContainerState extends State<CreatePrizeContainer> {
                       placeNumber: _placeNumber.text,
                     );
                     final createdPrize =
-                        await GlobalConfig.connection?.createPrize(prize);
+                        await GlobalConfig.connection.createPrize(prize);
                     dev.log(createdPrize.toString());
                     if (!mounted) return;
                     Navigator.of(context).pop(createdPrize);

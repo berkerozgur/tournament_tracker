@@ -6,8 +6,7 @@ import '../global_config.dart';
 import '../models/person.dart';
 import '../models/team.dart';
 import '../widgets/add_new_member_container.dart';
-import '../widgets/shared/add_to_list_dropdown.dart';
-import '../widgets/shared/selected_objects_list.dart';
+import '../widgets/custom_text_form_field.dart';
 
 class CreateTeam extends StatefulWidget {
   const CreateTeam({super.key});
@@ -19,8 +18,8 @@ class CreateTeam extends StatefulWidget {
 class _CreateTeamState extends State<CreateTeam> {
   late final TextEditingController _teamName;
   final _formKey = GlobalKey<FormState>();
-  var _availableMembers = <Person>[];
   final _selectedMembers = <Person>[];
+  var _availableMembers = <Person>[];
   Person? _selectedMember;
 
   Future<void> _getAllPeople() async {
@@ -37,30 +36,6 @@ class _CreateTeamState extends State<CreateTeam> {
     _getAllPeople();
   }
 
-  void _selectMember(Person? member) {
-    setState(() {
-      _selectedMember = member;
-    });
-  }
-
-  void _addMemberToSelectedList(Person? member) {
-    if (member != null) {
-      setState(() {
-        _availableMembers.remove(member);
-        _selectedMembers.add(member);
-        _selectedMember = null;
-      });
-    }
-  }
-
-  void _removeMemberFromSelectedList(Person member) {
-    setState(() {
-      _selectedMembers.remove(member);
-      _availableMembers.add(member);
-      _selectedMember = null;
-    });
-  }
-
   @override
   void dispose() {
     _teamName.dispose();
@@ -75,7 +50,7 @@ class _CreateTeamState extends State<CreateTeam> {
         title: const Text('Create Team'),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(13.6),
         child: Form(
           key: _formKey,
           child: Column(
@@ -86,31 +61,55 @@ class _CreateTeamState extends State<CreateTeam> {
                     Expanded(
                       child: Column(
                         children: [
-                          TextFormField(
+                          // TODO: Prevent users from entering "," for the name
+                          // Team name
+                          CustomTextFormField(
                             controller: _teamName,
-                            decoration: const InputDecoration(
-                              label: Text('Team name'),
-                              border: OutlineInputBorder(),
-                            ),
+                            label: 'Team name',
                             validator: (value) {
-                              // TODO: Do not let people put comma in team name
-                              if (value != null) {
-                                if (_teamName.text.isEmpty) {
-                                  return 'Please enter a team name';
-                                }
+                              if (value != null && value.isEmpty) {
+                                return 'Please enter a team name';
                               }
                               return null;
                             },
                           ),
                           const SizedBox(height: 13.6),
-                          AddToListDropdown<Person>(
-                            availableObjects: _availableMembers,
-                            selectedObject: _selectedMember,
-                            onObjectSelected: _selectMember,
-                            onObjectAdded: _addMemberToSelectedList,
-                            entryLabelBuilder: (object) => object.fullName,
-                            dropdownLabelText: 'Select team member',
-                            buttonText: 'Add member',
+                          Row(
+                            children: [
+                              // Available members dropdown
+                              DropdownMenu(
+                                key: ValueKey(_availableMembers.length),
+                                dropdownMenuEntries: _availableMembers
+                                    .map(
+                                      (member) => DropdownMenuEntry(
+                                        value: member,
+                                        label: member.fullName,
+                                      ),
+                                    )
+                                    .toList(),
+                                label: const Text('Select team member'),
+                                onSelected: (value) {
+                                  setState(() {
+                                    _selectedMember = value;
+                                  });
+                                },
+                                width: 136.6 * 2,
+                              ),
+                              const SizedBox(width: 13.6),
+                              // Add member button
+                              FilledButton(
+                                onPressed: () {
+                                  if (_selectedMember != null) {
+                                    setState(() {
+                                      _availableMembers.remove(_selectedMember);
+                                      _selectedMembers.add(_selectedMember!);
+                                      _selectedMember = null;
+                                    });
+                                  }
+                                },
+                                child: const Text('Add member'),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 13.6),
                           AddNewMemberContainer(
@@ -126,11 +125,51 @@ class _CreateTeamState extends State<CreateTeam> {
                     ),
                     const SizedBox(width: 13.6),
                     Expanded(
-                      child: SelectedObjectsList<Person>(
-                        selectedObjects: _selectedMembers,
-                        listTitle: 'Selected team members',
-                        listTileTitleBuilder: (person) => person.fullName,
-                        onObjectRemoved: _removeMemberFromSelectedList,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                'Selected team members',
+                                style:
+                                    Theme.of(context).textTheme.headlineSmall,
+                              ),
+                            ],
+                          ),
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: Theme.of(context).colorScheme.outline,
+                                ),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: ListView.builder(
+                                itemCount: _selectedMembers.length,
+                                itemBuilder: (context, index) {
+                                  final member = _selectedMembers[index];
+                                  return ListTile(
+                                    title: Text(member.fullName),
+                                    trailing: IconButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          _selectedMember = member;
+                                          _selectedMembers
+                                              .remove(_selectedMember);
+                                          _availableMembers
+                                              .add(_selectedMember!);
+                                          _selectedMember = null;
+                                        });
+                                      },
+                                      icon: const Icon(Icons.remove_outlined),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -145,8 +184,8 @@ class _CreateTeamState extends State<CreateTeam> {
                       scaffoldMessenger.showSnackBar(
                         const SnackBar(
                           content: Text(
-                              'Please select team members before creating the '
-                              'team'),
+                            'Please select team members before creating a team',
+                          ),
                         ),
                       );
                       return;

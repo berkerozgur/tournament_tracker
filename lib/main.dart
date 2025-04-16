@@ -8,6 +8,7 @@ import 'package:window_manager/window_manager.dart';
 import 'data_access/text_connection.dart';
 import 'global_config.dart';
 import 'models/tournament.dart';
+import 'views/create_team.dart';
 import 'views/create_tournament.dart';
 import 'views/tournament_dashboard.dart';
 import 'views/tournament_viewer.dart';
@@ -55,12 +56,15 @@ void main(List<String> args) async {
       final view = argument['view'];
 
       switch (view) {
-        case 'tournament_viewer':
-          final tournament = Tournament.fromJson(argument['tournament']);
-          _setupSubWindow(TournamentViewer(tournament: tournament));
+        case 'create_team':
+          _setupSubWindow(const CreateTeam());
           break;
         case 'create_tournament':
           _setupSubWindow(const CreateTournament());
+          break;
+        case 'tournament_viewer':
+          final tournament = Tournament.fromJson(argument['tournament']);
+          _setupSubWindow(TournamentViewer(tournament: tournament));
           break;
         default:
           dev.log('Reached default case somehow');

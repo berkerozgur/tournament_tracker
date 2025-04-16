@@ -1,16 +1,15 @@
+import 'dart:convert';
+
 import 'package:decimal/decimal.dart';
+import 'package:desktop_multi_window/desktop_multi_window.dart' as multi_window;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../global_config.dart';
-import '../models/matchup.dart';
 import '../models/prize.dart';
 import '../models/team.dart';
 import '../models/tournament.dart';
 import '../tournament_logic.dart';
-import '../widgets/shared/add_to_list_dropdown.dart';
-import '../widgets/shared/selected_objects_list.dart';
-import 'create_prize_container.dart';
+import '../widgets/custom_text_form_field.dart';
 
 class CreateTournament extends StatefulWidget {
   const CreateTournament({super.key});
@@ -20,64 +19,21 @@ class CreateTournament extends StatefulWidget {
 }
 
 class _CreateTournamentState extends State<CreateTournament> {
-  late final TextEditingController _tournamentName;
   late final TextEditingController _entryFee;
+  late final TextEditingController _tournamentName;
   final _formKey = GlobalKey<FormState>();
-  var _availableTeams = <Team>[];
-  final _selectedTeams = <Team>[];
   final _selectedPrizes = <Prize>[];
+  final _selectedTeams = <Team>[];
+  var _availableTeams = <Team>[];
+  Prize? _selectedPrize;
   Team? _selectedTeam;
 
   @override
   void initState() {
     super.initState();
-    _tournamentName = TextEditingController();
     _entryFee = TextEditingController();
+    _tournamentName = TextEditingController();
     _getAllTeams();
-  }
-
-  Future<void> _getAllTeams() async {
-    final availableTeams = await GlobalConfig.connection?.getAllTeams();
-    setState(() {
-      _availableTeams = availableTeams!;
-    });
-  }
-
-  void _selectTeam(Team? team) {
-    setState(() {
-      _selectedTeam = team;
-    });
-  }
-
-  // TODO: adding and removing from lists, can they be generic as well?
-  void _addPrizeToSelectedList(Prize prize) {
-    setState(() {
-      _selectedPrizes.add(prize);
-    });
-  }
-
-  void _addTeamToSelectedList(Team? team) {
-    if (team != null) {
-      setState(() {
-        _availableTeams.remove(team);
-        _selectedTeams.add(team);
-        _selectedTeam = null;
-      });
-    }
-  }
-
-  void _removePrizeFromSelectedList(Prize prize) {
-    setState(() {
-      _selectedPrizes.remove(prize);
-    });
-  }
-
-  void _removeTeamFromSelectedList(Team team) {
-    setState(() {
-      _selectedTeams.remove(team);
-      _availableTeams.add(team);
-      _selectedTeam = null;
-    });
   }
 
   @override
@@ -85,6 +41,13 @@ class _CreateTournamentState extends State<CreateTournament> {
     _entryFee.dispose();
     _tournamentName.dispose();
     super.dispose();
+  }
+
+  Future<void> _getAllTeams() async {
+    final availableTeams = await GlobalConfig.connection?.getAllTeams();
+    setState(() {
+      _availableTeams = availableTeams!;
+    });
   }
 
   @override
@@ -95,7 +58,7 @@ class _CreateTournamentState extends State<CreateTournament> {
         title: const Text('Create Tournament'),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(13.6),
         child: Form(
           key: _formKey,
           child: Column(
@@ -106,37 +69,27 @@ class _CreateTournamentState extends State<CreateTournament> {
                     Expanded(
                       child: Column(
                         children: [
-                          TextFormField(
+                          // TODO: Prevent users from entering "," for the name
+                          // Tournament name
+                          CustomTextFormField(
                             controller: _tournamentName,
-                            decoration: const InputDecoration(
-                              label: Text('Tournament name'),
-                              border: OutlineInputBorder(),
-                            ),
+                            label: 'Tournament name',
                             validator: (value) {
-                              if (value != null) {
-                                if (_tournamentName.text.isEmpty) {
-                                  return 'Please enter a tournament name';
-                                }
+                              if (value != null && value.isEmpty) {
+                                return 'Please enter a tournament name';
                               }
                               return null;
                             },
                           ),
                           const SizedBox(height: 13.6),
-                          TextFormField(
+                          // TODO: Users should only enter numbers
+                          // Entry fee
+                          CustomTextFormField(
                             controller: _entryFee,
-                            decoration: const InputDecoration(
-                              label: Text('Entry fee'),
-                              border: OutlineInputBorder(),
-                            ),
-                            inputFormatters: [
-                              FilteringTextInputFormatter.allow(
-                                RegExp(r'^\d*\.?\d*$'),
-                              ),
-                            ],
-                            keyboardType: TextInputType.number,
+                            label: 'Entry fee',
                             validator: (value) {
                               if (value != null) {
-                                var fee =
+                                final fee =
                                     Decimal.tryParse(value) ?? Decimal.zero;
                                 if (fee < Decimal.zero) {
                                   return 'Please enter a positive number or '
@@ -149,36 +102,66 @@ class _CreateTournamentState extends State<CreateTournament> {
                           const SizedBox(height: 13.6),
                           Row(
                             children: [
-                              AddToListDropdown<Team>(
-                                availableObjects: _availableTeams,
-                                selectedObject: _selectedTeam,
-                                onObjectSelected: _selectTeam,
-                                onObjectAdded: _addTeamToSelectedList,
-                                entryLabelBuilder: (object) => object.name,
-                                dropdownLabelText: 'Select team',
-                                buttonText: 'Add team',
+                              // Available teams dropdown
+                              DropdownMenu(
+                                key: ValueKey(_availableTeams.length),
+                                dropdownMenuEntries: _availableTeams
+                                    .map(
+                                      (team) => DropdownMenuEntry(
+                                        value: team,
+                                        label: team.name,
+                                      ),
+                                    )
+                                    .toList(),
+                                label: const Text('Select team'),
+                                onSelected: (value) {
+                                  setState(() {
+                                    _selectedTeam = value;
+                                  });
+                                },
+                                width: 136.6 * 2,
+                              ),
+                              const SizedBox(width: 13.6),
+                              // Add team button
+                              FilledButton(
+                                onPressed: () {
+                                  if (_selectedTeam != null) {
+                                    setState(() {
+                                      _availableTeams.remove(_selectedTeam);
+                                      _selectedTeams.add(_selectedTeam!);
+                                      _selectedTeam = null;
+                                    });
+                                  }
+                                },
+                                child: const Text('Add team'),
                               ),
                               const SizedBox(width: 13.6),
                               const Text('or'),
+                              // Create new team button
                               TextButton(
-                                // TODO: Navigator is used here and showDialog is used elsewhere.
-                                // I will decide on a consistent approach after completing all views.
                                 onPressed: () async {
-                                  final team = await Navigator.pushNamed<Team>(
-                                    context,
-                                    '/create-team',
+                                  final window = await multi_window
+                                      .DesktopMultiWindow.createWindow(
+                                    jsonEncode(
+                                      {'view': 'create_team'},
+                                    ),
                                   );
-                                  if (team != null) {
-                                    setState(() {
-                                      _selectedTeams.add(team);
-                                    });
-                                  }
+                                  window
+                                    ..setFrame(const Offset(0, 0) &
+                                        const Size(1366, 768))
+                                    ..center()
+                                    ..setTitle('Create Team')
+                                    ..show();
+                                  // if (team != null) {
+                                  //   setState(() {
+                                  //     _selectedTeams.add(team);
+                                  //   });
+                                  // }
                                 },
                                 child: const Text('Create new team'),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 136),
                         ],
                       ),
                     ),
@@ -186,42 +169,116 @@ class _CreateTournamentState extends State<CreateTournament> {
                     Expanded(
                       child: Column(
                         children: [
-                          // TODO: these lists should expand right half of the screen
+                          // Selected teams container
                           Expanded(
-                            child: SelectedObjectsList<Team>(
-                              selectedObjects: _selectedTeams,
-                              listTitle: 'Selected teams',
-                              listTileTitleBuilder: (team) => team.name,
-                              onObjectRemoved: _removeTeamFromSelectedList,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      'Selected teams',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .headlineSmall,
+                                    ),
+                                  ],
+                                ),
+                                Expanded(
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .outline),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: ListView.builder(
+                                      itemCount: _selectedTeams.length,
+                                      itemBuilder: (context, index) {
+                                        final team = _selectedTeams[index];
+                                        return ListTile(
+                                          title: Text(
+                                            team.name,
+                                          ),
+                                          // TODO: Display team members here
+                                          // subtitle: ,
+                                          trailing: IconButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                _selectedTeam = team;
+                                                _selectedTeams
+                                                    .remove(_selectedTeam);
+                                                _availableTeams
+                                                    .add(_selectedTeam!);
+                                                _selectedTeam = null;
+                                              });
+                                            },
+                                            icon: const Icon(
+                                              Icons.remove_outlined,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                           const SizedBox(height: 13.6),
+                          // Prizes container
                           Expanded(
-                            child: SelectedObjectsList<Prize>(
-                              selectedObjects: _selectedPrizes,
-                              listTitle: 'Prizes',
-                              listTitleTrailing: TextButton(
-                                onPressed: () async {
-                                  // Call the CreatePrize
-                                  // Get back a Prize
-                                  final prize = await showDialog<Prize>(
-                                    context: context,
-                                    builder: (context) {
-                                      return const AlertDialog(
-                                        title: Text('Create prize'),
-                                        content: CreatePrizeContainer(),
-                                      );
-                                    },
-                                  );
-                                  // Take the Prize and put it into selected prizes
-                                  if (prize != null) {
-                                    _addPrizeToSelectedList(prize);
-                                  }
-                                },
-                                child: const Text('Create prize'),
-                              ),
-                              listTileTitleBuilder: (prize) => prize.placeName,
-                              onObjectRemoved: _removePrizeFromSelectedList,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      'Prizes',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .headlineSmall,
+                                    ),
+                                    TextButton(
+                                      onPressed: () {},
+                                      child: const Text('Create prize'),
+                                    ),
+                                  ],
+                                ),
+                                Expanded(
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .outline),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: ListView.builder(
+                                      itemCount: _selectedPrizes.length,
+                                      itemBuilder: (context, index) {
+                                        final prize = _selectedPrizes[index];
+                                        return ListTile(
+                                          title: Text(prize.placeName),
+                                          trailing: IconButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                _selectedPrize = prize;
+                                                _selectedPrizes
+                                                    .remove(_selectedPrize);
+                                                _selectedPrize = null;
+                                              });
+                                            },
+                                            icon: const Icon(
+                                                Icons.remove_outlined),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -231,15 +288,16 @@ class _CreateTournamentState extends State<CreateTournament> {
                 ),
               ),
               const SizedBox(height: 13.6 * 3),
+              // Create tournament button
               FilledButton(
                 onPressed: () async {
                   if (_formKey.currentState?.validate() ?? false) {
                     if (_selectedTeams.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content:
-                              Text('Please select teams before creating the '
-                                  'tournament'),
+                          content: Text(
+                            'Please select teams before creating a tournament',
+                          ),
                         ),
                       );
                       return;
@@ -248,13 +306,10 @@ class _CreateTournamentState extends State<CreateTournament> {
                     final tournament = Tournament(
                       id: -1,
                       enteredTeams: _selectedTeams,
-                      entryFee:
-                          Decimal.tryParse(_entryFee.text) ?? Decimal.zero,
+                      entryFee: Decimal.parse(_entryFee.text),
                       name: _tournamentName.text,
                       prizes: _selectedPrizes,
-                      // An empty list is passed for testing purposes to simulate the
-                      // functionality of pretend rounds.
-                      rounds: <List<Matchup>>[],
+                      rounds: [],
                     );
 
                     // Wire matchups

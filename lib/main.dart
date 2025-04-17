@@ -7,6 +7,7 @@ import 'app_routes.dart';
 import 'data_access/text_connection.dart';
 import 'global_config.dart';
 import 'models/tournament.dart';
+import 'views/create_team.dart';
 import 'views/create_tournament.dart';
 import 'views/tournament_dashboard.dart';
 import 'views/tournament_viewer.dart';
@@ -55,6 +56,7 @@ class MainApp extends StatelessWidget {
       },
       routes: {
         AppRoutes.home: (context) => const TournamentDashboard(),
+        AppRoutes.createTeam: (context) => const CreateTeam(),
         AppRoutes.createTournament: (context) => const CreateTournament(),
       },
     );

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../app_routes.dart';
 import '../global_config.dart';
 import '../models/tournament.dart';
+import '../widgets/custom_button.dart';
 
 class TournamentDashboard extends StatefulWidget {
   const TournamentDashboard({super.key});
@@ -70,53 +71,20 @@ class _TournamentDashboardState extends State<TournamentDashboard> {
             CustomButton(
               buttonType: ButtonType.filled,
               enabled: _isLoadTournamentEnabled,
+              minWidth: MediaQuery.of(context).size.width * 0.3,
               onPressed: _loadTournament,
               text: 'Load tournament',
             ),
             const SizedBox(height: 7.68 * 2),
             CustomButton(
               buttonType: ButtonType.outlined,
+              minWidth: MediaQuery.of(context).size.width * 0.3,
               onPressed: _createTournament,
               text: 'Create tournament',
             ),
           ],
         ),
       ),
-    );
-  }
-}
-
-enum ButtonType { filled, outlined }
-
-class CustomButton extends StatelessWidget {
-  final ButtonType buttonType;
-  final bool enabled;
-  final VoidCallback? onPressed;
-  final String text;
-
-  const CustomButton({
-    super.key,
-    required this.buttonType,
-    this.enabled = true,
-    required this.onPressed,
-    required this.text,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: BoxConstraints(
-        minWidth: MediaQuery.of(context).size.width * 0.3,
-      ),
-      child: buttonType == ButtonType.filled
-          ? FilledButton(
-              onPressed: enabled ? onPressed : null,
-              child: Text(text),
-            )
-          : OutlinedButton(
-              onPressed: enabled ? onPressed : null,
-              child: Text(text),
-            ),
     );
   }
 }

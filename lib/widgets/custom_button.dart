@@ -5,25 +5,23 @@ enum ButtonType { filled, outlined, text }
 class CustomButton extends StatelessWidget {
   final ButtonType buttonType;
   final bool enabled;
-  final double? minWidth;
   final VoidCallback? onPressed;
   final String text;
+  final double? width;
 
   const CustomButton({
     super.key,
     required this.buttonType,
     this.enabled = true,
-    this.minWidth,
     required this.onPressed,
     required this.text,
+    this.width,
   });
 
   @override
   Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: BoxConstraints(
-        minWidth: minWidth ?? 0,
-      ),
+    return SizedBox(
+      width: width,
       child: switch (buttonType) {
         ButtonType.filled => FilledButton(
             onPressed: enabled ? onPressed : null,

@@ -188,53 +188,57 @@ class _CreateTournamentState extends State<CreateTournament> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text('Create Tournament'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(13.6),
-        child: Column(
-          children: [
-            Expanded(
-              child: Row(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Tournament name and entry fee form
+                  Expanded(
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CustomTextFormField(
+                            controller: _tournamentNameController,
+                            label: 'Tournament name',
+                            validator: _validateTournamentName,
+                          ),
+                          const SizedBox(height: 16),
+                          CustomTextFormField(
+                            controller: _entryFeeController,
+                            label: 'Entry fee',
+                            validator: _validateEntryFee,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 24),
+                  // Team selection row
                   Expanded(
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Form(
-                          key: _formKey,
-                          child: Column(
-                            children: [
-                              CustomTextFormField(
-                                controller: _tournamentNameController,
-                                label: 'Tournament name',
-                                validator: _validateTournamentName,
-                              ),
-                              const SizedBox(height: 7.68 * 2),
-                              CustomTextFormField(
-                                controller: _entryFeeController,
-                                label: 'Entry fee',
-                                validator: _validateEntryFee,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 7.68 * 2),
                         Row(
                           children: [
-                            Row(
-                              children: [
-                                TeamsDropdown(
-                                  onSelected: _selectTeam,
-                                  teams: _availableTeams,
-                                ),
-                                const SizedBox(width: 13.6),
-                                CustomButton(
-                                  buttonType: ButtonType.filled,
-                                  onPressed: _addTeam,
-                                  text: 'Add team',
-                                ),
-                              ],
+                            TeamsDropdown(
+                              onSelected: _selectTeam,
+                              teams: _availableTeams,
                             ),
-                            const SizedBox(width: 13.6),
+                            const SizedBox(width: 16),
+                            CustomButton(
+                              buttonType: ButtonType.filled,
+                              onPressed: _addTeam,
+                              text: 'Add team',
+                            ),
+                            const SizedBox(width: 16),
                             const Text('or'),
+                            const SizedBox(width: 8),
                             CustomButton(
                               buttonType: ButtonType.text,
                               onPressed: _createTeamOnPressed,
@@ -245,63 +249,70 @@ class _CreateTournamentState extends State<CreateTournament> {
                       ],
                     ),
                   ),
-                  const SizedBox(width: 13.6),
-                  Expanded(
-                    child: Column(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const HeadlineSmallText(text: 'Selected teams'),
-                              Expanded(
-                                child: SelectedTeams(
-                                  onPressed: _removeTeam,
-                                  teams: _selectedTeams,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 7.68 * 2),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  const HeadlineSmallText(
-                                    text: 'Selected prizes',
-                                  ),
-                                  CustomButton(
-                                    buttonType: ButtonType.text,
-                                    onPressed: _createPrizeOnPressed,
-                                    text: 'Create prize',
-                                  ),
-                                ],
-                              ),
-                              Expanded(
-                                child: SelectedPrizes(
-                                  onPressed: _removePrize,
-                                  prizes: _selectedPrizes,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
                 ],
               ),
-            ),
-            const SizedBox(height: 7.68 * 3),
-            CustomButton(
-              buttonType: ButtonType.filled,
-              onPressed: _createTournamentOnPressed,
-              text: 'Create tournament',
-            ),
-          ],
+              const SizedBox(height: 16),
+              // Teams and prizes section
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Selected teams section
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const HeadlineSmallText(text: 'Selected teams'),
+                          const SizedBox(height: 8),
+                          Flexible(
+                            child: SelectedTeams(
+                              onPressed: _removeTeam,
+                              teams: _selectedTeams,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    // Selected prizes section
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const HeadlineSmallText(text: 'Selected prizes'),
+                              CustomButton(
+                                buttonType: ButtonType.text,
+                                onPressed: _createPrizeOnPressed,
+                                text: 'Create prize',
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Flexible(
+                            child: SelectedPrizes(
+                              onPressed: _removePrize,
+                              prizes: _selectedPrizes,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Create tournament button
+              CustomButton(
+                buttonType: ButtonType.filled,
+                onPressed: _createTournamentOnPressed,
+                text: 'Create tournament',
+                width: MediaQuery.of(context).size.width * 0.3,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -327,19 +338,23 @@ class SelectedPrizes extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(4),
       ),
-      child: ListView.builder(
-        itemCount: prizes.length,
-        itemBuilder: (context, index) {
-          final prize = prizes[index];
-          return ListTile(
-            title: Text(prize.placeName),
-            trailing: IconButton(
-              onPressed: onPressed,
-              icon: const Icon(Icons.remove_outlined),
+      child: prizes.isEmpty
+          ? const Center(
+              child: Text('No prizes added'),
+            )
+          : ListView.builder(
+              itemCount: prizes.length,
+              itemBuilder: (context, index) {
+                final prize = prizes[index];
+                return ListTile(
+                  title: Text(prize.placeName),
+                  trailing: IconButton(
+                    onPressed: onPressed,
+                    icon: const Icon(Icons.remove_outlined),
+                  ),
+                );
+              },
             ),
-          );
-        },
-      ),
     );
   }
 }
@@ -363,19 +378,23 @@ class SelectedTeams extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(4),
       ),
-      child: ListView.builder(
-        itemCount: teams.length,
-        itemBuilder: (context, index) {
-          final team = teams[index];
-          return ListTile(
-            title: Text(team.name),
-            trailing: IconButton(
-              onPressed: onPressed,
-              icon: const Icon(Icons.remove_outlined),
+      child: teams.isEmpty
+          ? const Center(
+              child: Text('No teams selected'),
+            )
+          : ListView.builder(
+              itemCount: teams.length,
+              itemBuilder: (context, index) {
+                final team = teams[index];
+                return ListTile(
+                  title: Text(team.name),
+                  trailing: IconButton(
+                    onPressed: onPressed,
+                    icon: const Icon(Icons.remove_outlined),
+                  ),
+                );
+              },
             ),
-          );
-        },
-      ),
     );
   }
 }

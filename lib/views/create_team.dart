@@ -136,22 +136,13 @@ class _CreateTeamState extends State<CreateTeam> {
           Expanded(
             child: Row(
               children: [
-                Expanded(
+                const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const HeadlineSmallText(text: 'Create new member'),
+                      HeadlineSmallText(text: 'Create new member'),
                       Flexible(
-                        // Add new member container placeholder
-                        child: Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: Theme.of(context).colorScheme.outline,
-                            ),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: const Placeholder(),
-                        ),
+                        child: CreateNewMember(),
                       ),
                     ],
                   ),
@@ -182,6 +173,107 @@ class _CreateTeamState extends State<CreateTeam> {
             width: MediaQuery.of(context).size.width * 0.3,
           ),
         ],
+      ),
+    );
+  }
+}
+
+class CreateNewMember extends StatefulWidget {
+  const CreateNewMember({super.key});
+
+  @override
+  State<CreateNewMember> createState() => _CreateNewMemberState();
+}
+
+class _CreateNewMemberState extends State<CreateNewMember> {
+  late final TextEditingController _emailController;
+  late final TextEditingController _firstNameController;
+  late final TextEditingController _lastNameController;
+  late final TextEditingController _phoneController;
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController = TextEditingController();
+    _firstNameController = TextEditingController();
+    _lastNameController = TextEditingController();
+    _phoneController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  void _createNewMember() {}
+
+  String? _validateEmailAddress(String? value) {
+    return null;
+  }
+
+  String? _validateFirstName(String? value) {
+    return null;
+  }
+
+  String? _validateLastName(String? value) {
+    return null;
+  }
+
+  String? _validatePhoneNumber(String? value) {
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              CustomTextFormField(
+                controller: _firstNameController,
+                isOutlined: false,
+                label: 'First name',
+                validator: _validateFirstName,
+              ),
+              const SizedBox(height: 16),
+              CustomTextFormField(
+                controller: _lastNameController,
+                isOutlined: false,
+                label: 'Last name',
+                validator: _validateLastName,
+              ),
+              const SizedBox(height: 16),
+              CustomTextFormField(
+                controller: _phoneController,
+                label: 'Phone number',
+                validator: _validatePhoneNumber,
+                isOutlined: false,
+              ),
+              const SizedBox(height: 16),
+              CustomTextFormField(
+                controller: _emailController,
+                label: 'Email address',
+                validator: _validateEmailAddress,
+                isOutlined: false,
+              ),
+              const Spacer(),
+              CustomButton(
+                buttonType: ButtonType.filled,
+                onPressed: _createNewMember,
+                text: 'Create new member',
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -228,29 +320,26 @@ class SelectedTeamMembers extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline,
-        ),
-        borderRadius: BorderRadius.circular(4),
-      ),
+    return Card(
       child: members.isEmpty
           ? const Center(
               child: Text('No members selected'),
             )
-          : ListView.builder(
-              itemCount: members.length,
-              itemBuilder: (context, index) {
-                final member = members[index];
-                return ListTile(
-                  title: Text(member.fullName),
-                  trailing: IconButton(
-                    onPressed: onPressed,
-                    icon: const Icon(Icons.remove_outlined),
-                  ),
-                );
-              },
+          : Padding(
+              padding: const EdgeInsets.all(16),
+              child: ListView.builder(
+                itemCount: members.length,
+                itemBuilder: (context, index) {
+                  final member = members[index];
+                  return ListTile(
+                    title: Text(member.fullName),
+                    trailing: IconButton(
+                      onPressed: onPressed,
+                      icon: const Icon(Icons.remove_outlined),
+                    ),
+                  );
+                },
+              ),
             ),
     );
   }

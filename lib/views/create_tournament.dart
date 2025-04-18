@@ -9,7 +9,7 @@ import '../tournament_logic.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_form_field.dart';
 import '../widgets/headline_small_text.dart';
-import 'create_prize_container.dart';
+import 'create_prize.dart';
 import 'create_team.dart';
 
 class CreateTournament extends StatefulWidget {
@@ -46,8 +46,7 @@ class _CreateTournamentState extends State<CreateTournament> {
 
   void _addPrize(Prize prize) {
     setState(() {
-      _selectedPrize = prize;
-      _selectedPrizes.add(_selectedPrize!);
+      _selectedPrizes.add(prize);
     });
   }
 
@@ -61,7 +60,7 @@ class _CreateTournamentState extends State<CreateTournament> {
     }
   }
 
-  void _createPrizeOnPressed() async {
+  void _showCreatePrizeDialog() async {
     // Call the CreatePrize
     // Get back a Prize
     final prize = await showDialog<Prize>(
@@ -69,7 +68,7 @@ class _CreateTournamentState extends State<CreateTournament> {
       builder: (context) {
         return const AlertDialog(
           title: Text('Create prize'),
-          content: CreatePrizeContainer(),
+          content: CreatePrize(),
         );
       },
     );
@@ -134,22 +133,19 @@ class _CreateTournamentState extends State<CreateTournament> {
     });
   }
 
-  void _removePrize() {
-    if (_selectedPrize != null) {
-      setState(() {
-        _selectedPrizes.remove(_selectedPrize);
-      });
-    }
+  void _removePrize(Prize prize) {
+    setState(() {
+      _selectedPrize = prize;
+      _selectedPrizes.remove(_selectedPrize);
+    });
   }
 
-  void _removeTeam() {
-    if (_selectedTeam != null) {
-      setState(() {
-        _selectedTeams.remove(_selectedTeam);
-        _availableTeams.add(_selectedTeam!);
-        _selectedTeam = null;
-      });
-    }
+  void _removeTeam(Team team) {
+    setState(() {
+      _selectedTeam = team;
+      _selectedTeams.remove(_selectedTeam);
+      _availableTeams.add(_selectedTeam!);
+    });
   }
 
   void _selectTeam(Team? team) {
@@ -242,14 +238,6 @@ class _CreateTournamentState extends State<CreateTournament> {
                               onPressed: _addTeam,
                               text: 'Add team',
                             ),
-                            const SizedBox(width: 16),
-                            const Text('or'),
-                            const SizedBox(width: 8),
-                            CustomButton(
-                              buttonType: ButtonType.text,
-                              onPressed: _createTeamOnPressed,
-                              text: 'Create new team',
-                            ),
                           ],
                         ),
                       ],
@@ -268,11 +256,22 @@ class _CreateTournamentState extends State<CreateTournament> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const HeadlineSmallText(text: 'Selected teams'),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const HeadlineSmallText(text: 'Selected teams'),
+                              CustomButton(
+                                buttonType: ButtonType.text,
+                                onPressed: _createTeamOnPressed,
+                                text: 'Create new team',
+                              ),
+                            ],
+                          ),
                           const SizedBox(height: 8),
                           Flexible(
                             child: SelectedTeams(
                               onPressed: _removeTeam,
+                              selectedTeam: _selectedTeam,
                               teams: _selectedTeams,
                             ),
                           ),
@@ -291,7 +290,7 @@ class _CreateTournamentState extends State<CreateTournament> {
                               const HeadlineSmallText(text: 'Selected prizes'),
                               CustomButton(
                                 buttonType: ButtonType.text,
-                                onPressed: _createPrizeOnPressed,
+                                onPressed: _showCreatePrizeDialog,
                                 text: 'Create prize',
                               ),
                             ],
@@ -301,6 +300,7 @@ class _CreateTournamentState extends State<CreateTournament> {
                             child: SelectedPrizes(
                               onPressed: _removePrize,
                               prizes: _selectedPrizes,
+                              selectedPrize: _selectedPrize,
                             ),
                           ),
                         ],
@@ -326,80 +326,80 @@ class _CreateTournamentState extends State<CreateTournament> {
 }
 
 class SelectedPrizes extends StatelessWidget {
-  final VoidCallback? onPressed;
+  final void Function(Prize prize)? onPressed;
   final List<Prize> prizes;
+  final Prize? selectedPrize;
 
   const SelectedPrizes({
     super.key,
     required this.onPressed,
     required this.prizes,
+    required this.selectedPrize,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline,
-        ),
-        borderRadius: BorderRadius.circular(4),
-      ),
+    return Card(
       child: prizes.isEmpty
           ? const Center(
               child: Text('No prizes added'),
             )
-          : ListView.builder(
-              itemCount: prizes.length,
-              itemBuilder: (context, index) {
-                final prize = prizes[index];
-                return ListTile(
-                  title: Text(prize.placeName),
-                  trailing: IconButton(
-                    onPressed: onPressed,
-                    icon: const Icon(Icons.remove_outlined),
-                  ),
-                );
-              },
+          : Padding(
+              padding: const EdgeInsets.all(16),
+              child: ListView.builder(
+                itemCount: prizes.length,
+                itemBuilder: (context, index) {
+                  final prize = prizes[index];
+                  return ListTile(
+                    selected: selectedPrize == prize,
+                    title: Text(prize.placeName),
+                    trailing: IconButton(
+                      onPressed: () => onPressed?.call(prize),
+                      icon: const Icon(Icons.remove_outlined),
+                    ),
+                  );
+                },
+              ),
             ),
     );
   }
 }
 
 class SelectedTeams extends StatelessWidget {
-  final VoidCallback? onPressed;
+  final void Function(Team team)? onPressed;
+  final Team? selectedTeam;
   final List<Team> teams;
 
   const SelectedTeams({
     super.key,
     required this.onPressed,
+    required this.selectedTeam,
     required this.teams,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline,
-        ),
-        borderRadius: BorderRadius.circular(4),
-      ),
+    return Card(
       child: teams.isEmpty
           ? const Center(
               child: Text('No teams selected'),
             )
-          : ListView.builder(
-              itemCount: teams.length,
-              itemBuilder: (context, index) {
-                final team = teams[index];
-                return ListTile(
-                  title: Text(team.name),
-                  trailing: IconButton(
-                    onPressed: onPressed,
-                    icon: const Icon(Icons.remove_outlined),
-                  ),
-                );
-              },
+          : Padding(
+              padding: const EdgeInsets.all(16),
+              child: ListView.builder(
+                itemCount: teams.length,
+                itemBuilder: (context, index) {
+                  final team = teams[index];
+                  return ListTile(
+                    selected: selectedTeam == team,
+                    title: Text(team.name),
+                    trailing: IconButton(
+                      onPressed: () => onPressed?.call(team),
+                      icon: const Icon(Icons.remove_outlined),
+                    ),
+                  );
+                },
+              ),
             ),
     );
   }

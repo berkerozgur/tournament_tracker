@@ -10,6 +10,7 @@ import '../widgets/custom_button.dart';
 import '../widgets/custom_text_form_field.dart';
 import '../widgets/headline_small_text.dart';
 import 'create_prize_container.dart';
+import 'create_team.dart';
 
 class CreateTournament extends StatefulWidget {
   const CreateTournament({super.key});
@@ -79,9 +80,14 @@ class _CreateTournamentState extends State<CreateTournament> {
   }
 
   void _createTeamOnPressed() async {
-    final team = await Navigator.pushNamed<Team>(
-      context,
-      '/create-team',
+    final team = await showDialog<Team>(
+      context: context,
+      builder: (context) {
+        return const AlertDialog(
+          title: Text('Create team'),
+          content: CreateTeam(),
+        );
+      },
     );
     if (team != null) {
       setState(() {

@@ -1,13 +1,11 @@
-import 'dart:developer' as dev;
-
 import 'package:flutter/material.dart';
 
 import '../global_config.dart';
 import '../models/person.dart';
 import '../models/team.dart';
-import '../widgets/add_new_member_container.dart';
-import '../widgets/shared/add_to_list_dropdown.dart';
-import '../widgets/shared/selected_objects_list.dart';
+import '../widgets/custom_button.dart';
+import '../widgets/custom_text_form_field.dart';
+import '../widgets/headline_small_text.dart';
 
 class CreateTeam extends StatefulWidget {
   const CreateTeam({super.key});
@@ -17,24 +15,69 @@ class CreateTeam extends StatefulWidget {
 }
 
 class _CreateTeamState extends State<CreateTeam> {
-  late final TextEditingController _teamName;
+  late final TextEditingController _teamNameController;
   final _formKey = GlobalKey<FormState>();
-  var _availableMembers = <Person>[];
   final _selectedMembers = <Person>[];
+  List<Person> _availableMembers = [];
   Person? _selectedMember;
-
-  Future<void> _getAllPeople() async {
-    final availableMembers = await GlobalConfig.connection.getAllPeople();
-    setState(() {
-      _availableMembers = availableMembers;
-    });
-  }
 
   @override
   void initState() {
     super.initState();
-    _teamName = TextEditingController();
+    _teamNameController = TextEditingController();
     _getAllPeople();
+  }
+
+  @override
+  void dispose() {
+    _teamNameController.dispose();
+    super.dispose();
+  }
+
+  void _addMember() {
+    if (_selectedMember != null) {
+      setState(() {
+        _availableMembers.remove(_selectedMember);
+        _selectedMembers.add(_selectedMember!);
+        _selectedMember = null;
+      });
+    }
+  }
+
+  void _createTeamOnPressed() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      if (_selectedMembers.isEmpty) {
+        _showEmptyTeamMembersError();
+        return;
+      }
+
+      final team = Team(
+        id: -1,
+        members: _selectedMembers,
+        name: _teamNameController.text,
+      );
+
+      final createdTeam = await GlobalConfig.connection.createTeam(team);
+      if (!mounted) return;
+      Navigator.pop(context, createdTeam);
+    }
+  }
+
+  Future<void> _getAllPeople() async {
+    final people = await GlobalConfig.connection.getAllPeople();
+    setState(() {
+      _availableMembers = people;
+    });
+  }
+
+  void _removeMember() {
+    if (_selectedMember != null) {
+      setState(() {
+        _selectedMembers.remove(_selectedMember);
+        _availableMembers.add(_selectedMember!);
+        _selectedMember = null;
+      });
+    }
   }
 
   void _selectMember(Person? member) {
@@ -43,133 +86,172 @@ class _CreateTeamState extends State<CreateTeam> {
     });
   }
 
-  void _addMemberToSelectedList(Person? member) {
-    if (member != null) {
-      setState(() {
-        _availableMembers.remove(member);
-        _selectedMembers.add(member);
-        _selectedMember = null;
-      });
+  void _showEmptyTeamMembersError() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Please select team members before creating a team'),
+      ),
+    );
+  }
+
+  String? _validateTeamName(String? value) {
+    if (value != null && value.isEmpty) {
+      return 'Please enter a team name';
     }
-  }
-
-  void _removeMemberFromSelectedList(Person member) {
-    setState(() {
-      _selectedMembers.remove(member);
-      _availableMembers.add(member);
-      _selectedMember = null;
-    });
-  }
-
-  @override
-  void dispose() {
-    _teamName.dispose();
-    super.dispose();
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('Create Team'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
+    return SizedBox(
+      width: MediaQuery.of(context).size.width * 0.8,
+      child: Column(
+        children: [
+          Row(
             children: [
               Expanded(
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        children: [
-                          TextFormField(
-                            controller: _teamName,
-                            decoration: const InputDecoration(
-                              label: Text('Team name'),
-                              border: OutlineInputBorder(),
-                            ),
-                            validator: (value) {
-                              // TODO: Do not let people put comma in team name
-                              if (value != null) {
-                                if (_teamName.text.isEmpty) {
-                                  return 'Please enter a team name';
-                                }
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 13.6),
-                          AddToListDropdown<Person>(
-                            availableObjects: _availableMembers,
-                            selectedObject: _selectedMember,
-                            onObjectSelected: _selectMember,
-                            onObjectAdded: _addMemberToSelectedList,
-                            entryLabelBuilder: (object) => object.fullName,
-                            dropdownLabelText: 'Select team member',
-                            buttonText: 'Add member',
-                          ),
-                          const SizedBox(height: 13.6),
-                          AddNewMemberContainer(
-                            selectedMembers: _selectedMembers,
-                            onMemberAdded: (member) {
-                              setState(() {
-                                _selectedMembers.add(member);
-                              });
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 13.6),
-                    Expanded(
-                      child: SelectedObjectsList<Person>(
-                        selectedObjects: _selectedMembers,
-                        listTitle: 'Selected team members',
-                        listTileTitleBuilder: (person) => person.fullName,
-                        onObjectRemoved: _removeMemberFromSelectedList,
-                      ),
-                    ),
-                  ],
+                child: Form(
+                  key: _formKey,
+                  child: CustomTextFormField(
+                    controller: _teamNameController,
+                    label: 'Team name',
+                    validator: _validateTeamName,
+                  ),
                 ),
               ),
-              const SizedBox(height: 13.6 * 3),
-              FilledButton(
-                onPressed: () async {
-                  if (_formKey.currentState?.validate() ?? false) {
-                    final scaffoldMessenger = ScaffoldMessenger.of(context);
-                    if (_selectedMembers.isEmpty) {
-                      scaffoldMessenger.showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                              'Please select team members before creating the '
-                              'team'),
-                        ),
-                      );
-                      return;
-                    }
-                    final team = Team(
-                      id: -1,
-                      members: _selectedMembers,
-                      name: _teamName.text,
-                    );
-
-                    final createdTeam =
-                        await GlobalConfig.connection.createTeam(team);
-                    dev.log(createdTeam.toString());
-                    if (!mounted) return;
-                    Navigator.pop(context, createdTeam);
-                  }
-                },
-                child: const Text('Create team'),
+              const SizedBox(width: 16),
+              TeamMembersDropdown(
+                onSelected: _selectMember,
+                members: _availableMembers,
+              ),
+              const SizedBox(width: 16),
+              CustomButton(
+                buttonType: ButtonType.filled,
+                onPressed: _addMember,
+                text: 'Add member',
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const HeadlineSmallText(text: 'Create new member'),
+                      Flexible(
+                        // Add new member container placeholder
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Theme.of(context).colorScheme.outline,
+                            ),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Placeholder(),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const HeadlineSmallText(text: 'Selected team members'),
+                      Flexible(
+                        child: SelectedTeamMembers(
+                          onPressed: _removeMember,
+                          members: _selectedMembers,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          CustomButton(
+            buttonType: ButtonType.filled,
+            onPressed: _createTeamOnPressed,
+            text: 'Create team',
+            width: MediaQuery.of(context).size.width * 0.3,
+          ),
+        ],
       ),
+    );
+  }
+}
+
+class TeamMembersDropdown extends StatelessWidget {
+  final void Function(Person? member)? onSelected;
+  final List<Person> members;
+
+  const TeamMembersDropdown({
+    super.key,
+    required this.onSelected,
+    required this.members,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownMenu(
+      initialSelection: members.isEmpty ? null : members.first,
+      dropdownMenuEntries: members
+          .map(
+            (member) => DropdownMenuEntry(
+              value: member,
+              label: member.fullName,
+            ),
+          )
+          .toList(),
+      label: const Text('Select member'),
+      onSelected: onSelected,
+      width: MediaQuery.of(context).size.width * 0.25,
+    );
+  }
+}
+
+class SelectedTeamMembers extends StatelessWidget {
+  final VoidCallback? onPressed;
+  final List<Person> members;
+
+  const SelectedTeamMembers({
+    super.key,
+    required this.onPressed,
+    required this.members,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline,
+        ),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: members.isEmpty
+          ? const Center(
+              child: Text('No members selected'),
+            )
+          : ListView.builder(
+              itemCount: members.length,
+              itemBuilder: (context, index) {
+                final member = members[index];
+                return ListTile(
+                  title: Text(member.fullName),
+                  trailing: IconButton(
+                    onPressed: onPressed,
+                    icon: const Icon(Icons.remove_outlined),
+                  ),
+                );
+              },
+            ),
     );
   }
 }

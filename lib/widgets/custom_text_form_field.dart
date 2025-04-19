@@ -4,7 +4,6 @@ typedef Validator = String? Function(String? value)?;
 
 class CustomTextFormField extends StatelessWidget {
   final TextEditingController controller;
-  final bool isOutlined;
   final String label;
   final Validator validator;
 
@@ -13,7 +12,6 @@ class CustomTextFormField extends StatelessWidget {
     required this.controller,
     required this.label,
     required this.validator,
-    this.isOutlined = true,
   });
 
   @override
@@ -21,8 +19,17 @@ class CustomTextFormField extends StatelessWidget {
     return TextFormField(
       controller: controller,
       decoration: InputDecoration(
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        fillColor: Theme.of(context).colorScheme.surfaceContainerLow,
+        filled: true,
         label: Text(label),
-        border: isOutlined ? const OutlineInputBorder() : null,
       ),
       validator: validator,
     );

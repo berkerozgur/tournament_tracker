@@ -5,7 +5,7 @@ import '../models/person.dart';
 import '../models/team.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_form_field.dart';
-import '../widgets/headline_small_text.dart';
+import '../widgets/generic_list_view.dart';
 
 class CreateTeam extends StatefulWidget {
   const CreateTeam({super.key});
@@ -70,14 +70,12 @@ class _CreateTeamState extends State<CreateTeam> {
     });
   }
 
-  void _removeMember() {
-    if (_selectedMember != null) {
-      setState(() {
-        _selectedMembers.remove(_selectedMember);
-        _availableMembers.add(_selectedMember!);
-        _selectedMember = null;
-      });
-    }
+  void _removeMember(Person member) {
+    setState(() {
+      _selectedMember = member;
+      _selectedMembers.remove(_selectedMember);
+      _availableMembers.add(_selectedMember!);
+    });
   }
 
   void _selectMember(Person? member) {
@@ -140,7 +138,6 @@ class _CreateTeamState extends State<CreateTeam> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      HeadlineSmallText(text: 'Create new member'),
                       Flexible(
                         child: CreateNewMember(),
                       ),
@@ -148,18 +145,11 @@ class _CreateTeamState extends State<CreateTeam> {
                   ),
                 ),
                 const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const HeadlineSmallText(text: 'Selected team members'),
-                      Flexible(
-                        child: SelectedTeamMembers(
-                          onPressed: _removeMember,
-                          members: _selectedMembers,
-                        ),
-                      ),
-                    ],
+                Flexible(
+                  child: GenericListView<Person>(
+                    iconButtonOnPressed: _removeMember,
+                    models: _selectedMembers,
+                    // selectedT: _selectedMember,
                   ),
                 ),
               ],
@@ -231,49 +221,62 @@ class _CreateNewMemberState extends State<CreateNewMember> {
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              CustomTextFormField(
-                controller: _firstNameController,
-                isOutlined: false,
-                label: 'First name',
-                validator: _validateFirstName,
-              ),
-              const SizedBox(height: 16),
-              CustomTextFormField(
-                controller: _lastNameController,
-                isOutlined: false,
-                label: 'Last name',
-                validator: _validateLastName,
-              ),
-              const SizedBox(height: 16),
-              CustomTextFormField(
-                controller: _phoneController,
-                label: 'Phone number',
-                validator: _validatePhoneNumber,
-                isOutlined: false,
-              ),
-              const SizedBox(height: 16),
-              CustomTextFormField(
-                controller: _emailController,
-                label: 'Email address',
-                validator: _validateEmailAddress,
-                isOutlined: false,
-              ),
-              const Spacer(),
-              CustomButton(
-                buttonType: ButtonType.filled,
-                onPressed: _createNewMember,
-                text: 'Create new member',
-              ),
-              const SizedBox(height: 8),
-            ],
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          Container(
+            color: Theme.of(context).colorScheme.primaryContainer,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                HeadlineSmallText(text: 'Create new member'),
+              ],
+            ),
           ),
-        ),
+          Expanded(
+            child: Form(
+              key: _formKey,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    CustomTextFormField(
+                      controller: _firstNameController,
+                      label: 'First name',
+                      validator: _validateFirstName,
+                    ),
+                    const SizedBox(height: 16),
+                    CustomTextFormField(
+                      controller: _lastNameController,
+                      label: 'Last name',
+                      validator: _validateLastName,
+                    ),
+                    const SizedBox(height: 16),
+                    CustomTextFormField(
+                      controller: _phoneController,
+                      label: 'Phone number',
+                      validator: _validatePhoneNumber,
+                    ),
+                    const SizedBox(height: 16),
+                    CustomTextFormField(
+                      controller: _emailController,
+                      label: 'Email address',
+                      validator: _validateEmailAddress,
+                    ),
+                    const Spacer(),
+                    CustomButton(
+                      buttonType: ButtonType.filled,
+                      onPressed: _createNewMember,
+                      text: 'Create new member',
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -304,43 +307,6 @@ class TeamMembersDropdown extends StatelessWidget {
       label: const Text('Select member'),
       onSelected: onSelected,
       width: MediaQuery.of(context).size.width * 0.25,
-    );
-  }
-}
-
-class SelectedTeamMembers extends StatelessWidget {
-  final VoidCallback? onPressed;
-  final List<Person> members;
-
-  const SelectedTeamMembers({
-    super.key,
-    required this.onPressed,
-    required this.members,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: members.isEmpty
-          ? const Center(
-              child: Text('No members selected'),
-            )
-          : Padding(
-              padding: const EdgeInsets.all(16),
-              child: ListView.builder(
-                itemCount: members.length,
-                itemBuilder: (context, index) {
-                  final member = members[index];
-                  return ListTile(
-                    title: Text(member.fullName),
-                    trailing: IconButton(
-                      onPressed: onPressed,
-                      icon: const Icon(Icons.remove_outlined),
-                    ),
-                  );
-                },
-              ),
-            ),
     );
   }
 }

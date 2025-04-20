@@ -8,7 +8,7 @@ import '../models/tournament.dart';
 import '../tournament_logic.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_form_field.dart';
-import '../widgets/headline_small_text.dart';
+import '../widgets/generic_list_view.dart';
 import 'create_prize.dart';
 import 'create_team.dart';
 
@@ -254,11 +254,11 @@ class _CreateTournamentState extends State<CreateTournament> {
                         children: [
                           const SizedBox(height: 8),
                           Flexible(
-                            child: SelectedTeams(
+                            child: GenericListView<Team>(
                               headlineButtonOnPressed: _showCreateTeamDialog,
                               iconButtonOnPressed: _removeTeam,
-                              selectedTeam: _selectedTeam,
-                              teams: _selectedTeams,
+                              models: _selectedTeams,
+                              // selectedTeam: _selectedTeam,
                             ),
                           ),
                         ],
@@ -272,11 +272,11 @@ class _CreateTournamentState extends State<CreateTournament> {
                         children: [
                           const SizedBox(height: 8),
                           Flexible(
-                            child: SelectedPrizes(
+                            child: GenericListView<Prize>(
                               headlineButtonOnPressed: _showCreatePrizeDialog,
                               iconButtonOnPressed: _removePrize,
-                              prizes: _selectedPrizes,
-                              selectedPrize: _selectedPrize,
+                              models: _selectedPrizes,
+                              // selectedPrize: _selectedPrize,
                             ),
                           ),
                         ],
@@ -296,134 +296,6 @@ class _CreateTournamentState extends State<CreateTournament> {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class SelectedPrizes extends StatelessWidget {
-  final VoidCallback? headlineButtonOnPressed;
-  final void Function(Prize prize)? iconButtonOnPressed;
-  final List<Prize> prizes;
-  final Prize? selectedPrize;
-
-  const SelectedPrizes({
-    super.key,
-    required this.iconButtonOnPressed,
-    required this.prizes,
-    required this.selectedPrize,
-    this.headlineButtonOnPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          Container(
-            color: Theme.of(context).colorScheme.primaryContainer,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const HeadlineSmallText(text: 'Selected prizes'),
-                CustomButton(
-                  buttonType: ButtonType.text,
-                  onPressed: headlineButtonOnPressed,
-                  text: 'Create prize',
-                ),
-              ],
-            ),
-          ),
-          prizes.isEmpty
-              ? const Expanded(
-                  child: Center(
-                    child: Text('No prizes added'),
-                  ),
-                )
-              : Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: ListView.builder(
-                    itemCount: prizes.length,
-                    itemBuilder: (context, index) {
-                      final prize = prizes[index];
-                      return ListTile(
-                        selected: selectedPrize == prize,
-                        title: Text(prize.placeName),
-                        trailing: IconButton(
-                          onPressed: () => iconButtonOnPressed?.call(prize),
-                          icon: const Icon(Icons.remove_outlined),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-        ],
-      ),
-    );
-  }
-}
-
-class SelectedTeams extends StatelessWidget {
-  final VoidCallback? headlineButtonOnPressed;
-  final void Function(Team team)? iconButtonOnPressed;
-  final Team? selectedTeam;
-  final List<Team> teams;
-
-  const SelectedTeams({
-    super.key,
-    required this.iconButtonOnPressed,
-    required this.selectedTeam,
-    required this.teams,
-    this.headlineButtonOnPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          Container(
-            color: Theme.of(context).colorScheme.primaryContainer,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const HeadlineSmallText(text: 'Selected teams'),
-                CustomButton(
-                  buttonType: ButtonType.text,
-                  onPressed: headlineButtonOnPressed,
-                  text: 'Create new team',
-                ),
-              ],
-            ),
-          ),
-          teams.isEmpty
-              ? const Expanded(
-                  child: Center(
-                    child: Text('No teams selected'),
-                  ),
-                )
-              : Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(0),
-                    itemCount: teams.length,
-                    itemBuilder: (context, index) {
-                      final team = teams[index];
-                      return ListTile(
-                        selected: selectedTeam == team,
-                        title: Text(team.name),
-                        trailing: IconButton(
-                          onPressed: () => iconButtonOnPressed?.call(team),
-                          icon: const Icon(Icons.remove_outlined),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-        ],
       ),
     );
   }

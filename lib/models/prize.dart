@@ -1,6 +1,8 @@
 import 'package:decimal/decimal.dart' show Decimal;
 
-class Prize {
+import 'displayable.dart';
+
+class Prize with Displayable {
   int id;
   Decimal? amount;
   double? percentage;

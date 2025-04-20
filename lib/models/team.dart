@@ -1,6 +1,7 @@
+import 'displayable.dart';
 import 'person.dart';
 
-class Team {
+class Team with Displayable {
   int id;
   final List<Person> members;
   final String name;

@@ -6,6 +6,7 @@ import '../models/person.dart';
 import '../models/prize.dart';
 import '../models/team.dart';
 import 'custom_button.dart';
+import 'headline_small_text.dart';
 
 class GenericListView<T> extends StatelessWidget {
   final VoidCallback? headlineButtonOnPressed;
@@ -94,23 +95,6 @@ class GenericListView<T> extends StatelessWidget {
                 ),
         ],
       ),
-    );
-  }
-}
-
-class HeadlineSmallText extends StatelessWidget {
-  final String text;
-
-  const HeadlineSmallText({
-    super.key,
-    required this.text,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: Theme.of(context).textTheme.headlineSmall,
     );
   }
 }

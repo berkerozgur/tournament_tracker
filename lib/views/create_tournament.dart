@@ -46,13 +46,12 @@ class _CreateTournamentState extends State<CreateTournament> {
   }
 
   void _addTeam() {
-    if (_selectedTeam != null) {
-      setState(() {
-        _availableTeams.remove(_selectedTeam);
-        _selectedTeams.add(_selectedTeam!);
-        _selectedTeam = null;
-      });
-    }
+    setState(() {
+      _selectedTeam ??= _availableTeams.first;
+      _availableTeams.remove(_selectedTeam);
+      _selectedTeams.add(_selectedTeam!);
+      _selectedTeam = null;
+    });
   }
 
   void _showCreatePrizeDialog() async {
@@ -107,7 +106,11 @@ class _CreateTournamentState extends State<CreateTournament> {
       // Create tournament entry
       // Create all of the prizes entries
       // Create all of the teams entries
-      await GlobalConfig.connection.createTournament(tournament);
+      final createdTournament =
+          await GlobalConfig.connection.createTournament(tournament);
+
+      if (!mounted) return;
+      Navigator.pop(context, createdTournament);
     }
   }
 
@@ -115,7 +118,7 @@ class _CreateTournamentState extends State<CreateTournament> {
     final tournament = Tournament(
       id: -1,
       enteredTeams: _selectedTeams,
-      entryFee: Decimal.parse(_entryFeeController.text),
+      entryFee: Decimal.tryParse(_entryFeeController.text) ?? Decimal.zero,
       name: _tournamentNameController.text,
       prizes: _selectedPrizes,
       rounds: [],

@@ -4,6 +4,7 @@ import '../app_routes.dart';
 import '../global_config.dart';
 import '../models/tournament.dart';
 import '../widgets/custom_button.dart';
+import '../widgets/generic_dropdown.dart';
 
 class TournamentDashboard extends StatefulWidget {
   const TournamentDashboard({super.key});
@@ -23,11 +24,18 @@ class _TournamentDashboardState extends State<TournamentDashboard> {
     _getAllTournaments();
   }
 
-  void _createTournament() {
-    Navigator.pushNamed(
+  void _createTournament() async {
+    final tournament = await Navigator.pushNamed(
       context,
       AppRoutes.createTournament,
     );
+    setState(() {
+      _selectedTournament = tournament as Tournament?;
+      if (_selectedTournament != null) {
+        _tournaments.add(_selectedTournament!);
+        _isLoadTournamentEnabled = true;
+      }
+    });
   }
 
   Future<void> _getAllTournaments() async {
@@ -63,9 +71,10 @@ class _TournamentDashboardState extends State<TournamentDashboard> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            TournamentsDropdown(
+            GenericDropdown(
               onSelected: _selectTournament,
-              tournaments: _tournaments,
+              models: _tournaments,
+              width: MediaQuery.of(context).size.width * 0.5,
             ),
             const SizedBox(height: 32),
             CustomButton(
@@ -89,31 +98,31 @@ class _TournamentDashboardState extends State<TournamentDashboard> {
   }
 }
 
-class TournamentsDropdown extends StatelessWidget {
-  final void Function(Tournament? tournament)? onSelected;
-  final List<Tournament> tournaments;
+// class TournamentsDropdown extends StatelessWidget {
+//   final void Function(Tournament? tournament)? onSelected;
+//   final List<Tournament> tournaments;
 
-  const TournamentsDropdown({
-    super.key,
-    required this.onSelected,
-    required this.tournaments,
-  });
+//   const TournamentsDropdown({
+//     super.key,
+//     required this.onSelected,
+//     required this.tournaments,
+//   });
 
-  @override
-  Widget build(BuildContext context) {
-    return DropdownMenu(
-      initialSelection: tournaments.isEmpty ? null : tournaments.first,
-      dropdownMenuEntries: tournaments
-          .map(
-            (tournament) => DropdownMenuEntry(
-              value: tournament,
-              label: tournament.name,
-            ),
-          )
-          .toList(),
-      label: const Text('Load existing tournament'),
-      onSelected: onSelected,
-      width: MediaQuery.of(context).size.width * 0.5,
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return DropdownMenu(
+//       initialSelection: tournaments.isEmpty ? null : tournaments.first,
+//       dropdownMenuEntries: tournaments
+//           .map(
+//             (tournament) => DropdownMenuEntry(
+//               value: tournament,
+//               label: tournament.name,
+//             ),
+//           )
+//           .toList(),
+//       label: const Text('Load existing tournament'),
+//       onSelected: onSelected,
+//       width: MediaQuery.of(context).size.width * 0.5,
+//     );
+//   }
+// }

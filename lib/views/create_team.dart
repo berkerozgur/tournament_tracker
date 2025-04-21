@@ -7,6 +7,7 @@ import '../widgets/custom_button.dart';
 import '../widgets/custom_text_form_field.dart';
 import '../widgets/generic_dropdown.dart';
 import '../widgets/generic_list_view.dart';
+import 'create_new_member.dart';
 
 class CreateTeam extends StatefulWidget {
   const CreateTeam({super.key});
@@ -37,6 +38,7 @@ class _CreateTeamState extends State<CreateTeam> {
 
   void _addMember() {
     setState(() {
+      _selectedMember ??= _availableMembers.first;
       _availableMembers.remove(_selectedMember);
       _selectedMembers.add(_selectedMember!);
       _selectedMember = null;
@@ -140,12 +142,18 @@ class _CreateTeamState extends State<CreateTeam> {
           Expanded(
             child: Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Flexible(
-                        child: CreateNewMember(),
+                        child: CreateNewMember(
+                          onMemberCreated: (member) {
+                            setState(() {
+                              _selectedMembers.add(member);
+                            });
+                          },
+                        ),
                       ),
                     ],
                   ),
@@ -167,120 +175,6 @@ class _CreateTeamState extends State<CreateTeam> {
             onPressed: _createTeamOnPressed,
             text: 'Create team',
             width: MediaQuery.of(context).size.width * 0.3,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class CreateNewMember extends StatefulWidget {
-  const CreateNewMember({super.key});
-
-  @override
-  State<CreateNewMember> createState() => _CreateNewMemberState();
-}
-
-class _CreateNewMemberState extends State<CreateNewMember> {
-  late final TextEditingController _emailController;
-  late final TextEditingController _firstNameController;
-  late final TextEditingController _lastNameController;
-  late final TextEditingController _phoneController;
-  final _formKey = GlobalKey<FormState>();
-
-  @override
-  void initState() {
-    super.initState();
-    _emailController = TextEditingController();
-    _firstNameController = TextEditingController();
-    _lastNameController = TextEditingController();
-    _phoneController = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _firstNameController.dispose();
-    _lastNameController.dispose();
-    _phoneController.dispose();
-    super.dispose();
-  }
-
-  void _createNewMember() {}
-
-  String? _validateEmailAddress(String? value) {
-    return null;
-  }
-
-  String? _validateFirstName(String? value) {
-    return null;
-  }
-
-  String? _validateLastName(String? value) {
-    return null;
-  }
-
-  String? _validatePhoneNumber(String? value) {
-    return null;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          Container(
-            color: Theme.of(context).colorScheme.inversePrimary,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                HeadlineSmallText(text: 'Create new member'),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Form(
-              key: _formKey,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  children: [
-                    CustomTextFormField(
-                      controller: _firstNameController,
-                      label: 'First name',
-                      validator: _validateFirstName,
-                    ),
-                    const SizedBox(height: 16),
-                    CustomTextFormField(
-                      controller: _lastNameController,
-                      label: 'Last name',
-                      validator: _validateLastName,
-                    ),
-                    const SizedBox(height: 16),
-                    CustomTextFormField(
-                      controller: _phoneController,
-                      label: 'Phone number',
-                      validator: _validatePhoneNumber,
-                    ),
-                    const SizedBox(height: 16),
-                    CustomTextFormField(
-                      controller: _emailController,
-                      label: 'Email address',
-                      validator: _validateEmailAddress,
-                    ),
-                    const Spacer(),
-                    CustomButton(
-                      buttonType: ButtonType.filled,
-                      onPressed: _createNewMember,
-                      text: 'Create new member',
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                ),
-              ),
-            ),
           ),
         ],
       ),

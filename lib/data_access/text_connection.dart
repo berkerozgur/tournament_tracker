@@ -119,7 +119,7 @@ class TextConnection extends DataConnection {
   }
 
   @override
-  Future<void> createTournament(Tournament tournament) async {
+  Future<Tournament> createTournament(Tournament tournament) async {
     final tournaments = await getAllTournaments();
 
     var currentId = 1;
@@ -132,6 +132,8 @@ class TextConnection extends DataConnection {
     await _writeRoundsToFiles(tournament);
     tournaments.add(tournament);
     await _writeToTournamentsFile(tournaments);
+
+    return tournament;
   }
 
   // GET

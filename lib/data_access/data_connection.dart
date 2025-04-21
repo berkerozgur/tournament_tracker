@@ -11,7 +11,7 @@ abstract class DataConnection {
 
   Future<Team> createTeam(Team team);
 
-  Future<void> createTournament(Tournament tournament);
+  Future<Tournament> createTournament(Tournament tournament);
 
   Future<List<Person>> getAllPeople();
 

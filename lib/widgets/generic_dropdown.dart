@@ -4,21 +4,25 @@ import 'package:flutter/material.dart';
 
 import '../models/person.dart';
 import '../models/team.dart';
+import '../models/tournament.dart';
 
 class GenericDropdown<T> extends StatelessWidget {
   final List<T> models;
   final void Function(T? model)? onSelected;
+  final double? width;
 
   const GenericDropdown({
     super.key,
     required this.models,
     required this.onSelected,
+    this.width,
   });
 
   String _createLabel(T model) {
     final entryLabel = switch (model) {
       Person p => p.fullName,
       Team t => t.name,
+      Tournament t => t.name,
       _ => throw Exception(
           'Unsupported item type: ${model.runtimeType}',
         ),
@@ -31,10 +35,12 @@ class GenericDropdown<T> extends StatelessWidget {
     final dropdownLabel = switch (T) {
       Person => 'Select team members',
       Team => 'Select team',
+      Tournament => 'Select tournament',
       _ => 'Unsupported type: ${T.toString()}',
     };
 
     return DropdownMenu(
+      key: ValueKey(models.length),
       initialSelection: models.isNotEmpty ? models.first : null,
       inputDecorationTheme: InputDecorationTheme(
         enabledBorder: OutlineInputBorder(
@@ -69,7 +75,7 @@ class GenericDropdown<T> extends StatelessWidget {
       //   backgroundColor: WidgetStateProperty.all<Color>(Colors.lightBlue),
       // ),
       onSelected: onSelected,
-      width: MediaQuery.of(context).size.width * 0.25,
+      width: width ?? MediaQuery.of(context).size.width * 0.25,
     );
   }
 }

@@ -8,6 +8,7 @@ import '../models/tournament.dart';
 import '../tournament_logic.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_form_field.dart';
+import '../widgets/generic_dropdown.dart';
 import '../widgets/generic_list_view.dart';
 import 'create_prize.dart';
 import 'create_team.dart';
@@ -224,13 +225,14 @@ class _CreateTournamentState extends State<CreateTournament> {
                       children: [
                         Row(
                           children: [
-                            TeamsDropdown(
+                            GenericDropdown<Team>(
                               onSelected: _selectTeam,
-                              teams: _availableTeams,
+                              models: _availableTeams,
                             ),
                             const SizedBox(width: 16),
                             CustomButton(
                               buttonType: ButtonType.filled,
+                              enabled: _availableTeams.isNotEmpty,
                               onPressed: _addTeam,
                               text: 'Add team',
                             ),
@@ -297,58 +299,6 @@ class _CreateTournamentState extends State<CreateTournament> {
           ),
         ),
       ),
-    );
-  }
-}
-
-class TeamsDropdown extends StatelessWidget {
-  final void Function(Team? team)? onSelected;
-  final List<Team> teams;
-
-  const TeamsDropdown({
-    super.key,
-    required this.onSelected,
-    required this.teams,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return DropdownMenu(
-      initialSelection: teams.isEmpty ? null : teams.first,
-      inputDecorationTheme: InputDecorationTheme(
-        enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide.none,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide.none,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        fillColor: Theme.of(context).colorScheme.surfaceContainerLow,
-        filled: true,
-      ),
-      dropdownMenuEntries: teams
-          .map(
-            (team) => DropdownMenuEntry(
-              value: team,
-              label: team.name,
-            ),
-          )
-          .toList(),
-      label: const Text('Select team'),
-      // menuStyle: MenuStyle(
-      //   // Remove borders by setting the side to BorderSide.none
-      //   shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-      //     RoundedRectangleBorder(
-      //       borderRadius: BorderRadius.circular(8.0),
-      //       side: BorderSide.none, // This removes the border
-      //     ),
-      //   ),
-      //   // Change background color
-      //   backgroundColor: WidgetStateProperty.all<Color>(Colors.lightBlue),
-      // ),
-      onSelected: onSelected,
-      width: MediaQuery.of(context).size.width * 0.25,
     );
   }
 }

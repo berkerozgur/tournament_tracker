@@ -1,6 +1,4 @@
-import 'displayable.dart';
-
-class Person with Displayable {
+class Person {
   int id;
   final String emailAddress;
   final String firstName;

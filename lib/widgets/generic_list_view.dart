@@ -2,13 +2,12 @@
 
 import 'package:flutter/material.dart';
 
-import '../models/displayable.dart';
 import '../models/person.dart';
 import '../models/prize.dart';
 import '../models/team.dart';
 import 'custom_button.dart';
 
-class GenericListView<T extends Displayable> extends StatelessWidget {
+class GenericListView<T> extends StatelessWidget {
   final VoidCallback? headlineButtonOnPressed;
   final void Function(T model)? iconButtonOnPressed;
   final List<T> models;
@@ -48,7 +47,7 @@ class GenericListView<T extends Displayable> extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            color: Theme.of(context).colorScheme.primaryContainer,
+            color: Theme.of(context).colorScheme.inversePrimary,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

@@ -5,6 +5,7 @@ import '../models/person.dart';
 import '../models/team.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_form_field.dart';
+import '../widgets/generic_dropdown.dart';
 import '../widgets/generic_list_view.dart';
 
 class CreateTeam extends StatefulWidget {
@@ -35,13 +36,11 @@ class _CreateTeamState extends State<CreateTeam> {
   }
 
   void _addMember() {
-    if (_selectedMember != null) {
-      setState(() {
-        _availableMembers.remove(_selectedMember);
-        _selectedMembers.add(_selectedMember!);
-        _selectedMember = null;
-      });
-    }
+    setState(() {
+      _availableMembers.remove(_selectedMember);
+      _selectedMembers.add(_selectedMember!);
+      _selectedMember = null;
+    });
   }
 
   void _createTeamOnPressed() async {
@@ -118,15 +117,22 @@ class _CreateTeamState extends State<CreateTeam> {
                 ),
               ),
               const SizedBox(width: 16),
-              TeamMembersDropdown(
-                onSelected: _selectMember,
-                members: _availableMembers,
-              ),
-              const SizedBox(width: 16),
-              CustomButton(
-                buttonType: ButtonType.filled,
-                onPressed: _addMember,
-                text: 'Add member',
+              Expanded(
+                child: Row(
+                  children: [
+                    GenericDropdown<Person>(
+                      onSelected: _selectMember,
+                      models: _availableMembers,
+                    ),
+                    const SizedBox(width: 16),
+                    CustomButton(
+                      buttonType: ButtonType.filled,
+                      enabled: _availableMembers.isNotEmpty,
+                      onPressed: _addMember,
+                      text: 'Add member',
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -225,7 +231,7 @@ class _CreateNewMemberState extends State<CreateNewMember> {
       child: Column(
         children: [
           Container(
-            color: Theme.of(context).colorScheme.primaryContainer,
+            color: Theme.of(context).colorScheme.inversePrimary,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: const Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -278,35 +284,6 @@ class _CreateNewMemberState extends State<CreateNewMember> {
           ),
         ],
       ),
-    );
-  }
-}
-
-class TeamMembersDropdown extends StatelessWidget {
-  final void Function(Person? member)? onSelected;
-  final List<Person> members;
-
-  const TeamMembersDropdown({
-    super.key,
-    required this.onSelected,
-    required this.members,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return DropdownMenu(
-      initialSelection: members.isEmpty ? null : members.first,
-      dropdownMenuEntries: members
-          .map(
-            (member) => DropdownMenuEntry(
-              value: member,
-              label: member.fullName,
-            ),
-          )
-          .toList(),
-      label: const Text('Select member'),
-      onSelected: onSelected,
-      width: MediaQuery.of(context).size.width * 0.25,
     );
   }
 }

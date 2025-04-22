@@ -7,24 +7,25 @@ import '../models/team.dart';
 import '../models/tournament.dart';
 
 class GenericDropdown<T> extends StatelessWidget {
-  final List<T> models;
-  final void Function(T? model)? onSelected;
+  final List<T> listOfInstances;
+  final void Function(T? instance)? onSelected;
   final double? width;
 
   const GenericDropdown({
     super.key,
-    required this.models,
+    required this.listOfInstances,
     required this.onSelected,
     this.width,
   });
 
-  String _createLabel(T model) {
-    final entryLabel = switch (model) {
+  String _createLabel(T instance) {
+    final entryLabel = switch (instance) {
       Person p => p.fullName,
       Team t => t.name,
       Tournament t => t.name,
+      int i => i.toString(),
       _ => throw Exception(
-          'Unsupported item type: ${model.runtimeType}',
+          'Unsupported item type: ${instance.runtimeType}',
         ),
     };
     return entryLabel;
@@ -36,12 +37,14 @@ class GenericDropdown<T> extends StatelessWidget {
       Person => 'Select team members',
       Team => 'Select team',
       Tournament => 'Select tournament',
+      int => 'Round',
       _ => 'Unsupported type: ${T.toString()}',
     };
 
     return DropdownMenu(
-      key: ValueKey(models.length),
-      initialSelection: models.isNotEmpty ? models.first : null,
+      key: ValueKey(listOfInstances.length),
+      initialSelection:
+          listOfInstances.isNotEmpty ? listOfInstances.first : null,
       inputDecorationTheme: InputDecorationTheme(
         enabledBorder: OutlineInputBorder(
           borderSide: BorderSide.none,
@@ -54,7 +57,7 @@ class GenericDropdown<T> extends StatelessWidget {
         fillColor: Theme.of(context).colorScheme.surfaceContainerLow,
         filled: true,
       ),
-      dropdownMenuEntries: models
+      dropdownMenuEntries: listOfInstances
           .map(
             (model) => DropdownMenuEntry(
               value: model,

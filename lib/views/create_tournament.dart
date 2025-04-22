@@ -7,6 +7,7 @@ import '../models/team.dart';
 import '../models/tournament.dart';
 import '../tournament_logic.dart';
 import '../widgets/custom_button.dart';
+import '../widgets/custom_card.dart';
 import '../widgets/custom_text_form_field.dart';
 import '../widgets/generic_dropdown.dart';
 import '../widgets/generic_list_view.dart';
@@ -230,7 +231,7 @@ class _CreateTournamentState extends State<CreateTournament> {
                           children: [
                             GenericDropdown<Team>(
                               onSelected: _selectTeam,
-                              models: _availableTeams,
+                              listOfInstances: _availableTeams,
                             ),
                             const SizedBox(width: 16),
                             CustomButton(
@@ -252,24 +253,6 @@ class _CreateTournamentState extends State<CreateTournament> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Selected teams section
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 8),
-                          Flexible(
-                            child: GenericListView<Team>(
-                              headlineButtonOnPressed: _showCreateTeamDialog,
-                              iconButtonOnPressed: _removeTeam,
-                              models: _selectedTeams,
-                              // selectedTeam: _selectedTeam,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 16),
                     // Selected prizes section
                     Expanded(
                       child: Column(
@@ -277,11 +260,43 @@ class _CreateTournamentState extends State<CreateTournament> {
                         children: [
                           const SizedBox(height: 8),
                           Flexible(
-                            child: GenericListView<Prize>(
-                              headlineButtonOnPressed: _showCreatePrizeDialog,
-                              iconButtonOnPressed: _removePrize,
-                              models: _selectedPrizes,
-                              // selectedPrize: _selectedPrize,
+                            child: CustomCard(
+                              headingText: 'Prizes',
+                              headingTrailing: CustomButton(
+                                buttonType: ButtonType.text,
+                                onPressed: _showCreatePrizeDialog,
+                                text: 'Create prize',
+                              ),
+                              child: GenericListView<Prize>(
+                                iconButtonOnPressed: _removePrize,
+                                models: _selectedPrizes,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    // Selected teams section
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 8),
+                          Flexible(
+                            child: CustomCard(
+                              headingText: 'Selected teams',
+                              headingTrailing: CustomButton(
+                                buttonType: ButtonType.text,
+                                onPressed: _showCreateTeamDialog,
+                                text: 'Create new team',
+                              ),
+                              child: Expanded(
+                                child: GenericListView<Team>(
+                                  iconButtonOnPressed: _removeTeam,
+                                  models: _selectedTeams,
+                                ),
+                              ),
                             ),
                           ),
                         ],

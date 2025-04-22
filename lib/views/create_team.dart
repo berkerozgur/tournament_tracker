@@ -4,6 +4,7 @@ import '../global_config.dart';
 import '../models/person.dart';
 import '../models/team.dart';
 import '../widgets/custom_button.dart';
+import '../widgets/custom_card.dart';
 import '../widgets/custom_text_form_field.dart';
 import '../widgets/generic_dropdown.dart';
 import '../widgets/generic_list_view.dart';
@@ -124,7 +125,7 @@ class _CreateTeamState extends State<CreateTeam> {
                   children: [
                     GenericDropdown<Person>(
                       onSelected: _selectMember,
-                      models: _availableMembers,
+                      listOfInstances: _availableMembers,
                     ),
                     const SizedBox(width: 16),
                     CustomButton(
@@ -147,12 +148,15 @@ class _CreateTeamState extends State<CreateTeam> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Flexible(
-                        child: CreateNewMember(
-                          onMemberCreated: (member) {
-                            setState(() {
-                              _selectedMembers.add(member);
-                            });
-                          },
+                        child: CustomCard(
+                          headingText: 'Create new member',
+                          child: CreateNewMember(
+                            onMemberCreated: (member) {
+                              setState(() {
+                                _selectedMembers.add(member);
+                              });
+                            },
+                          ),
                         ),
                       ),
                     ],
@@ -160,10 +164,12 @@ class _CreateTeamState extends State<CreateTeam> {
                 ),
                 const SizedBox(width: 16),
                 Flexible(
-                  child: GenericListView<Person>(
-                    iconButtonOnPressed: _removeMember,
-                    models: _selectedMembers,
-                    // selectedT: _selectedMember,
+                  child: CustomCard(
+                    headingText: 'Selected members',
+                    child: GenericListView<Person>(
+                      iconButtonOnPressed: _removeMember,
+                      models: _selectedMembers,
+                    ),
                   ),
                 ),
               ],

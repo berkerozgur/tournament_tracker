@@ -47,6 +47,9 @@ class _TournamentDashboardState extends State<TournamentDashboard> {
   }
 
   void _loadTournament() {
+    setState(() {
+      _selectedTournament ??= _tournaments.first;
+    });
     Navigator.pushNamed(
       context,
       AppRoutes.tournamentViewer,
@@ -73,7 +76,7 @@ class _TournamentDashboardState extends State<TournamentDashboard> {
           children: [
             GenericDropdown(
               onSelected: _selectTournament,
-              models: _tournaments,
+              listOfInstances: _tournaments,
               width: MediaQuery.of(context).size.width * 0.5,
             ),
             const SizedBox(height: 32),
@@ -97,32 +100,3 @@ class _TournamentDashboardState extends State<TournamentDashboard> {
     );
   }
 }
-
-// class TournamentsDropdown extends StatelessWidget {
-//   final void Function(Tournament? tournament)? onSelected;
-//   final List<Tournament> tournaments;
-
-//   const TournamentsDropdown({
-//     super.key,
-//     required this.onSelected,
-//     required this.tournaments,
-//   });
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return DropdownMenu(
-//       initialSelection: tournaments.isEmpty ? null : tournaments.first,
-//       dropdownMenuEntries: tournaments
-//           .map(
-//             (tournament) => DropdownMenuEntry(
-//               value: tournament,
-//               label: tournament.name,
-//             ),
-//           )
-//           .toList(),
-//       label: const Text('Load existing tournament'),
-//       onSelected: onSelected,
-//       width: MediaQuery.of(context).size.width * 0.5,
-//     );
-//   }
-// }

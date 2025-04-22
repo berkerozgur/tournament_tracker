@@ -3,6 +3,21 @@ import 'package:flutter/material.dart';
 import '../global_config.dart';
 import '../models/matchup.dart';
 import '../models/tournament.dart';
+import '../widgets/custom_button.dart';
+import '../widgets/custom_card.dart';
+import '../widgets/custom_text_form_field.dart';
+import '../widgets/generic_dropdown.dart';
+import '../widgets/generic_list_view.dart';
+
+class TeamData {
+  String name;
+  final TextEditingController controller;
+
+  TeamData({
+    required this.name,
+    required this.controller,
+  });
+}
 
 class TournamentViewer extends StatefulWidget {
   final Tournament tournament;
@@ -14,48 +29,74 @@ class TournamentViewer extends StatefulWidget {
 }
 
 class _TournamentViewerState extends State<TournamentViewer> {
-  final _rounds = <int>[];
-  final _selectedMatchups = <Matchup>[];
   late final TextEditingController _teamOneController;
   late final TextEditingController _teamTwoController;
-  var _isChecked = false;
-  var _isMatchupInfoVisible = true;
-  var _selectedIdx = 0;
+  final List<int> _rounds = [];
+  final List<Matchup> _selectedMatchups = [];
   late Matchup _selectedMatchup;
-  var _selectedRound = 1;
-  var _teamOneName = '';
-  var _teamTwoName = '';
+  late TeamData _teamOne;
+  late TeamData _teamTwo;
+  var _isChecked = false;
+  // final _selectedIdx = 0;
+  int? _selectedRound;
+
+  @override
+  void initState() {
+    super.initState();
+    _teamOneController = TextEditingController();
+    _teamTwoController = TextEditingController();
+    _teamOne = TeamData(name: 'Not yet set', controller: _teamOneController);
+    _teamTwo = TeamData(name: 'Not yet set', controller: _teamTwoController);
+    _loadRounds();
+    _selectedMatchup = _selectedMatchups.first;
+  }
+
+  @override
+  void dispose() {
+    _teamOneController.dispose();
+    _teamTwoController.dispose();
+    super.dispose();
+  }
+
+  void _checkboxChanged(bool value) {
+    setState(() {
+      _isChecked = value;
+    });
+    _loadMatchups(_selectedRound);
+  }
 
   void _loadMatchup(Matchup matchup) {
+    _updateSelectedMatchup(matchup);
+
     for (var i = 0; i < matchup.entries.length; i++) {
       if (i == 0) {
         if (matchup.entries[0].teamCompeting != null) {
           setState(() {
-            _teamOneName = matchup.entries[0].teamCompeting!.name;
-            _teamOneController.text = matchup.entries[0].score == null
-                ? '0'
-                : matchup.entries[0].score.toString();
+            _teamOne.name = matchup.entries[0].teamCompeting!.name;
+            _teamOne.controller.text =
+                matchup.entries[0].score?.toString() ?? '0';
 
-            _teamTwoName = '<bye>';
-            _teamTwoController.text = '0';
+            _teamTwo.name = '<bye>';
+            _teamTwo.controller.text = '0';
           });
         } else {
           setState(() {
-            _teamOneName = 'Not yet set';
+            _teamOne.name = 'Not yet set';
+            _teamOne.controller.text = '';
           });
         }
       }
       if (i == 1) {
         if (matchup.entries[1].teamCompeting != null) {
           setState(() {
-            _teamTwoName = matchup.entries[1].teamCompeting!.name;
-            _teamTwoController.text = matchup.entries[1].score == null
-                ? '0'
-                : matchup.entries[1].score.toString();
+            _teamTwo.name = matchup.entries[1].teamCompeting!.name;
+            _teamTwo.controller.text =
+                matchup.entries[1].score?.toString() ?? '0';
           });
         } else {
           setState(() {
-            _teamTwoName = 'Not yet set';
+            _teamTwo.name = 'Not yet set';
+            _teamTwo.controller.text = '';
           });
         }
       }
@@ -79,21 +120,14 @@ class _TournamentViewerState extends State<TournamentViewer> {
     }
 
     if (_selectedMatchups.isNotEmpty) _loadMatchup(_selectedMatchups.first);
-
-    // _displayMatchupInfo();
-  }
-
-  void _displayMatchupInfo() {
-    setState(() {
-      _isMatchupInfoVisible = _selectedMatchups.isNotEmpty;
-    });
   }
 
   void _loadRounds() {
-    // _rounds.clear();
+    // Make sure to clear _rounds if you call this function more than one for
+    // some reason
     _rounds.add(1);
-    var currRound = 1;
 
+    var currRound = 1;
     for (var matchups in widget.tournament.rounds) {
       if (matchups.first.round > currRound) {
         currRound = matchups.first.round;
@@ -180,20 +214,16 @@ class _TournamentViewerState extends State<TournamentViewer> {
     GlobalConfig.connection.updateMatchup(_selectedMatchup);
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _teamOneController = TextEditingController();
-    _teamTwoController = TextEditingController();
-    _loadRounds();
-    _selectedMatchup = _selectedMatchups.first;
+  void _updateSelectedMatchup(Matchup matchup) {
+    setState(() {
+      _selectedMatchup = matchup;
+    });
   }
 
-  @override
-  void dispose() {
-    _teamOneController.dispose();
-    _teamTwoController.dispose();
-    super.dispose();
+  void _updateSelectedRound(int? selectedRound) {
+    setState(() {
+      _selectedRound = selectedRound;
+    });
   }
 
   @override
@@ -204,91 +234,60 @@ class _TournamentViewerState extends State<TournamentViewer> {
         title: Text(widget.tournament.name),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Row(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+        child: Column(
           children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // TODO: selected index in listview should reset to 1 when rounds changed
+                // Rounds dropdown
+                GenericDropdown<int>(
+                  listOfInstances: _rounds,
+                  onSelected: _loadMatchups,
+                  width: MediaQuery.of(context).size.width * 0.48,
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  // TODO: selected index in listview should reset to 1 when rounds changed
-                  // Rounds dropdown
-                  DropdownMenu(
-                    initialSelection: _rounds.first,
-                    dropdownMenuEntries: _rounds
-                        .map(
-                          (round) => DropdownMenuEntry(
-                            value: round,
-                            label: round.toString(),
-                          ),
-                        )
-                        .toList(),
-                    label: const Text('Round'),
-                    onSelected: (value) {
-                      setState(() {
-                        _selectedRound = value!;
-                      });
-                      _loadMatchups(value);
-                    },
-                    width: 136.6,
-                  ),
-                  const SizedBox(height: 13.6),
-                  // Unplayed only checkbox
-                  LabeledCheckbox(
-                    label: 'Unplayed only',
-                    onChanged: (value) {
-                      setState(() {
-                        _isChecked = value;
-                      });
-                      _loadMatchups(_selectedRound);
-                    },
-                    value: _isChecked,
-                  ),
-                  const SizedBox(height: 13.6),
                   // Matchups ListView
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.outline,
-                        ),
-                        borderRadius: BorderRadius.circular(4),
+                  Flexible(
+                    child: CustomCard(
+                      headingText: 'Matchups',
+                      headingTrailing: LabeledCheckbox(
+                        label: 'Unplayed only',
+                        onChanged: _checkboxChanged,
+                        value: _isChecked,
                       ),
-                      child: ListView.builder(
-                        itemBuilder: (context, index) {
-                          final matchup = _selectedMatchups[index];
-                          return ListTile(
-                            onTap: () {
-                              setState(() {
-                                _selectedIdx = index;
-                                _selectedMatchup = matchup;
-                              });
-                              _loadMatchup(matchup);
-                            },
-                            selected: index == _selectedIdx,
-                            title: Text(matchup.displayName),
-                          );
-                        },
-                        itemCount: _selectedMatchups.length,
+                      child: GenericListView<Matchup>(
+                        hasIconButton: false,
+                        isSelected: (matchup) => matchup == _selectedMatchup,
+                        listTileOnTap: _loadMatchup,
+                        models: _selectedMatchups,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 24),
+                  // Matchup info
+                  Flexible(
+                    child: Visibility(
+                      visible: _selectedMatchups.isNotEmpty,
+                      child: CustomCard(
+                        headingText: 'Scores',
+                        child: MatchupInfo(
+                          scoreOnPressed: _scoreOnPressed,
+                          teamOne: _teamOne,
+                          teamTwo: _teamTwo,
+                        ),
                       ),
                     ),
                   ),
                 ],
               ),
             ),
-            // Matchup info container
-            Expanded(
-              child: Visibility(
-                visible: _selectedMatchups.isNotEmpty,
-                child: MatchupInfoWidget(
-                  scoreOnPressed: _scoreOnPressed,
-                  teamOneController: _teamOneController,
-                  teamTwoController: _teamTwoController,
-                  teamOneName: _teamOneName,
-                  teamTwoName: _teamTwoName,
-                ),
-              ),
-            )
           ],
         ),
       ),
@@ -296,54 +295,64 @@ class _TournamentViewerState extends State<TournamentViewer> {
   }
 }
 
-class MatchupInfoWidget extends StatelessWidget {
+class MatchupInfo extends StatelessWidget {
   final VoidCallback scoreOnPressed;
-  final TextEditingController teamOneController;
-  final TextEditingController teamTwoController;
-  final String teamOneName;
-  final String teamTwoName;
+  final TeamData teamOne;
+  final TeamData teamTwo;
 
-  const MatchupInfoWidget({
+  const MatchupInfo({
     super.key,
     required this.scoreOnPressed,
-    required this.teamOneController,
-    required this.teamTwoController,
-    required this.teamOneName,
-    required this.teamTwoName,
+    required this.teamOne,
+    required this.teamTwo,
   });
+
+  String? _validateTeamOneScore(String? value) {
+    return null;
+  }
+
+  String? _validateTeamTwoScore(String? value) {
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        SizedBox(
-          width: 136.6 * 2,
-          child: TextFormField(
-            controller: teamOneController,
-            decoration: InputDecoration(
-              label: Text('$teamOneName score'),
+    final teamOneLabel =
+        teamOne.name == 'Not yet set' ? 'Not yet set' : '${teamOne.name} score';
+    final teamTwoLabel =
+        teamTwo.name == 'Not yet set' ? 'Not yet set' : '${teamTwo.name} score';
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
+      child: Column(
+        children: [
+          SizedBox(
+            width: double.maxFinite,
+            child: CustomTextFormField(
+              controller: teamOne.controller,
+              fillColor: Theme.of(context).colorScheme.surfaceContainerLowest,
+              label: teamOneLabel,
+              validator: _validateTeamOneScore,
             ),
           ),
-        ),
-        const SizedBox(height: 13.6),
-        SizedBox(
-          width: 136.6 * 2,
-          child: TextFormField(
-            controller: teamTwoController,
-            decoration: InputDecoration(
-              label: Text('$teamTwoName score'),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.maxFinite,
+            child: CustomTextFormField(
+              controller: teamTwo.controller,
+              fillColor: Theme.of(context).colorScheme.surfaceContainerLowest,
+              label: teamTwoLabel,
+              validator: _validateTeamTwoScore,
             ),
           ),
-        ),
-        const SizedBox(height: 13.6),
-        SizedBox(
-          width: 136.6,
-          child: FilledButton(
+          const SizedBox(height: 24),
+          CustomButton(
+            buttonType: ButtonType.filled,
             onPressed: scoreOnPressed,
-            child: const Text('Score'),
+            text: 'Score',
+            width: MediaQuery.of(context).size.width * 0.3,
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -374,7 +383,7 @@ class LabeledCheckbox extends StatelessWidget {
               onChanged(value!);
             },
           ),
-          const SizedBox(width: 13.6 / 2),
+          const SizedBox(width: 4),
           Text(label),
         ],
       ),

@@ -2,99 +2,67 @@
 
 import 'package:flutter/material.dart';
 
+import '../models/matchup.dart';
 import '../models/person.dart';
 import '../models/prize.dart';
 import '../models/team.dart';
-import 'custom_button.dart';
-import 'headline_small_text.dart';
 
 class GenericListView<T> extends StatelessWidget {
-  final VoidCallback? headlineButtonOnPressed;
+  final bool hasIconButton;
   final void Function(T model)? iconButtonOnPressed;
+  final bool Function(T model)? isSelected;
+  final void Function(T model)? listTileOnTap;
   final List<T> models;
-  // final T? selectedT;
 
   const GenericListView({
     super.key,
-    this.headlineButtonOnPressed,
-    required this.iconButtonOnPressed,
+    this.iconButtonOnPressed,
+    this.isSelected,
     required this.models,
-    // required this.selectedT,
-  });
+    this.hasIconButton = true,
+    this.listTileOnTap,
+  }) : assert(
+          hasIconButton || iconButtonOnPressed == null,
+          'iconButtonOnPressed will not be used when hasIconButton is false',
+        );
 
   @override
   Widget build(BuildContext context) {
-    final uiConfig = switch (T) {
-      Person => (
-          buttonText: null,
-          emptyListText: 'No members selected',
-          headlineText: 'Selected team members',
-        ),
-      Prize => (
-          buttonText: 'Create prize',
-          emptyListText: 'No prizes added',
-          headlineText: 'Selected prizes',
-        ),
-      Team => (
-          buttonText: 'Create new team',
-          emptyListText: 'No teams selected',
-          headlineText: 'Selected teams',
-        ),
+    final emptyListText = switch (T) {
+      Matchup => 'No matchups to show',
+      Person => 'No members selected',
+      Prize => 'No prizes added',
+      Team => 'No teams selected',
       _ => throw Exception('Unsupported type: ${T.toString()}'),
     };
 
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          Container(
-            color: Theme.of(context).colorScheme.inversePrimary,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                HeadlineSmallText(text: uiConfig.headlineText),
-                if (uiConfig.buttonText != null)
-                  CustomButton(
-                    buttonType: ButtonType.text,
-                    onPressed: headlineButtonOnPressed,
-                    text: uiConfig.buttonText!,
+    return models.isEmpty
+        ? Center(child: Text(emptyListText))
+        : ListView.builder(
+            itemCount: models.length,
+            itemBuilder: (context, index) {
+              final model = models[index];
+              final titleText = switch (model) {
+                Matchup m => m.displayName,
+                Person p => p.fullName,
+                Prize p => p.placeName,
+                Team t => t.name,
+                _ => throw Exception(
+                    'Unsupported item type: ${model.runtimeType}',
                   ),
-              ],
-            ),
-          ),
-          models.isEmpty
-              ? Expanded(
-                  child: Center(
-                    child: Text(uiConfig.emptyListText),
-                  ),
-                )
-              : Expanded(
-                  child: ListView.builder(
-                    itemCount: models.length,
-                    itemBuilder: (context, index) {
-                      final model = models[index];
-                      final titleText = switch (model) {
-                        Person p => p.fullName,
-                        Prize p => p.placeName,
-                        Team t => t.name,
-                        _ => throw Exception(
-                            'Unsupported item type: ${model.runtimeType}',
-                          ),
-                      };
-                      return ListTile(
-                        // selected: selectedT == t,
-                        title: Text(titleText),
-                        trailing: IconButton(
-                          onPressed: () => iconButtonOnPressed?.call(model),
-                          icon: const Icon(Icons.remove_outlined),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-        ],
-      ),
-    );
+              };
+              return ListTile(
+                onTap: () => listTileOnTap?.call(model),
+                selected: isSelected != null ? isSelected!(model) : false,
+                title: Text(titleText),
+                trailing: hasIconButton
+                    ? IconButton(
+                        onPressed: () => iconButtonOnPressed?.call(model),
+                        icon: const Icon(Icons.remove_outlined),
+                      )
+                    : null,
+              );
+            },
+          );
   }
 }

@@ -4,10 +4,9 @@ import '../global_config.dart';
 import '../models/person.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_form_field.dart';
-import '../widgets/headline_small_text.dart';
 
 class CreateNewMember extends StatefulWidget {
-  final Function(Person member) onMemberCreated;
+  final void Function(Person member) onMemberCreated;
 
   const CreateNewMember({super.key, required this.onMemberCreated});
 
@@ -90,20 +89,9 @@ class _CreateNewMemberState extends State<CreateNewMember> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
+    return Expanded(
       child: Column(
         children: [
-          Container(
-            color: Theme.of(context).colorScheme.inversePrimary,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                HeadlineSmallText(text: 'Create new member'),
-              ],
-            ),
-          ),
           Expanded(
             child: Form(
               key: _formKey,

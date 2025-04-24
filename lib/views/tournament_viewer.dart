@@ -9,11 +9,11 @@ import '../widgets/custom_text_form_field.dart';
 import '../widgets/generic_dropdown.dart';
 import '../widgets/generic_list_view.dart';
 
-class TeamData {
+class _TeamData {
   String name;
   final TextEditingController controller;
 
-  TeamData({
+  _TeamData({
     required this.name,
     required this.controller,
   });
@@ -29,44 +29,47 @@ class TournamentViewer extends StatefulWidget {
 }
 
 class _TournamentViewerState extends State<TournamentViewer> {
-  late final TextEditingController _teamOneController;
-  late final TextEditingController _teamTwoController;
+  final _formKey = GlobalKey<FormState>();
   final List<int> _rounds = [];
   final List<Matchup> _selectedMatchups = [];
-  late Matchup _selectedMatchup;
-  late TeamData _teamOne;
-  late TeamData _teamTwo;
-  var _isChecked = false;
-  // final _selectedIdx = 0;
+  late _TeamData _teamOne;
+  late _TeamData _teamTwo;
+  bool _isUnplayedOnlyChecked = false;
+  Matchup? _selectedMatchup;
   int? _selectedRound;
 
   @override
   void initState() {
     super.initState();
-    _teamOneController = TextEditingController();
-    _teamTwoController = TextEditingController();
-    _teamOne = TeamData(name: 'Not yet set', controller: _teamOneController);
-    _teamTwo = TeamData(name: 'Not yet set', controller: _teamTwoController);
+    _teamOne = _TeamData(
+      name: 'Not yet set',
+      controller: TextEditingController(),
+    );
+    _teamTwo = _TeamData(
+      name: 'Not yet set',
+      controller: TextEditingController(),
+    );
     _loadRounds();
-    _selectedMatchup = _selectedMatchups.first;
   }
 
   @override
   void dispose() {
-    _teamOneController.dispose();
-    _teamTwoController.dispose();
+    _teamOne.controller.dispose();
+    _teamTwo.controller.dispose();
     super.dispose();
   }
 
   void _checkboxChanged(bool value) {
     setState(() {
-      _isChecked = value;
+      _isUnplayedOnlyChecked = value;
     });
     _loadMatchups(_selectedRound);
   }
 
   void _loadMatchup(Matchup matchup) {
-    _updateSelectedMatchup(matchup);
+    setState(() {
+      _selectedMatchup = matchup;
+    });
 
     for (var i = 0; i < matchup.entries.length; i++) {
       if (i == 0) {
@@ -104,13 +107,17 @@ class _TournamentViewerState extends State<TournamentViewer> {
   }
 
   void _loadMatchups(int? selectedRound) {
+    setState(() {
+      _selectedRound = selectedRound;
+    });
+
     for (var matchups in widget.tournament.rounds) {
       if (matchups.first.round == selectedRound) {
         setState(() {
           _selectedMatchups.clear();
         });
         for (var matchup in matchups) {
-          if (matchup.winner == null || !_isChecked) {
+          if (matchup.winner == null || !_isUnplayedOnlyChecked) {
             setState(() {
               _selectedMatchups.add(matchup);
             });
@@ -119,7 +126,9 @@ class _TournamentViewerState extends State<TournamentViewer> {
       }
     }
 
-    if (_selectedMatchups.isNotEmpty) _loadMatchup(_selectedMatchups.first);
+    if (_selectedMatchups.isEmpty) return;
+    if (_isUnplayedOnlyChecked) _selectedMatchup = _selectedMatchups.first;
+    _loadMatchup(_selectedMatchup ??= _selectedMatchups.first);
   }
 
   void _loadRounds() {
@@ -138,22 +147,24 @@ class _TournamentViewerState extends State<TournamentViewer> {
     _loadMatchups(1);
   }
 
-  void _scoreOnPressed() {
-    final entries = _selectedMatchup.entries;
-    double? teamOneScore;
-    double? teamTwoScore;
+  void _roundOnSelected(int? selectedRound) {
+    setState(() {
+      _selectedMatchup = null;
+    });
+    _loadMatchups(selectedRound);
+  }
+
+  void _scoreMatchup() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    final entries = _selectedMatchup!.entries;
+    double teamOneScore = 0;
+    double teamTwoScore = 0;
+
     for (var i = 0; i < entries.length; i++) {
       if (i == 0) {
         if (entries[0].teamCompeting != null) {
-          teamOneScore = double.tryParse(_teamOneController.text);
-          if (teamOneScore == null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Please enter a valid score'),
-              ),
-            );
-            return;
-          }
+          teamOneScore = double.parse(_teamOne.controller.text);
           setState(() {
             entries[0].score = teamOneScore;
           });
@@ -161,30 +172,23 @@ class _TournamentViewerState extends State<TournamentViewer> {
       }
       if (i == 1) {
         if (entries[1].teamCompeting != null) {
-          teamTwoScore = double.tryParse(_teamTwoController.text);
-          if (teamTwoScore == null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Please enter a valid score'),
-              ),
-            );
-            return;
-          }
+          teamTwoScore = double.parse(_teamTwo.controller.text);
           setState(() {
             entries[1].score = teamTwoScore;
           });
         }
       }
     }
+
     // High score wins
-    if (teamOneScore! > teamTwoScore!) {
+    if (teamOneScore > teamTwoScore) {
       // Team one wins
       setState(() {
-        _selectedMatchup.winner = entries[0].teamCompeting;
+        _selectedMatchup!.winner = entries[0].teamCompeting;
       });
     } else if (teamTwoScore > teamOneScore) {
       setState(() {
-        _selectedMatchup.winner = entries[1].teamCompeting;
+        _selectedMatchup!.winner = entries[1].teamCompeting;
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -193,37 +197,23 @@ class _TournamentViewerState extends State<TournamentViewer> {
         ),
       );
     }
-    // TODO: fix this
-    // There is a problem on updating Matchups. Matchups file breaks after
-    // during this process
+
     for (var round in widget.tournament.rounds) {
       for (var matchup in round) {
         for (var entry in matchup.entries) {
           if (entry.parent != null) {
-            if (entry.parent!.id == _selectedMatchup.id) {
-              entry.teamCompeting = _selectedMatchup.winner;
+            if (entry.parent!.id == _selectedMatchup!.id) {
+              entry.teamCompeting = _selectedMatchup!.winner;
               GlobalConfig.connection.updateMatchup(matchup);
             }
           }
         }
       }
     }
-    // TODO: this doesn't work as expected
+
     _loadMatchups(_selectedRound);
 
-    GlobalConfig.connection.updateMatchup(_selectedMatchup);
-  }
-
-  void _updateSelectedMatchup(Matchup matchup) {
-    setState(() {
-      _selectedMatchup = matchup;
-    });
-  }
-
-  void _updateSelectedRound(int? selectedRound) {
-    setState(() {
-      _selectedRound = selectedRound;
-    });
+    await GlobalConfig.connection.updateMatchup(_selectedMatchup!);
   }
 
   @override
@@ -236,18 +226,13 @@ class _TournamentViewerState extends State<TournamentViewer> {
       body: Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // TODO: selected index in listview should reset to 1 when rounds changed
-                // Rounds dropdown
-                GenericDropdown<int>(
-                  listOfInstances: _rounds,
-                  onSelected: _loadMatchups,
-                  width: MediaQuery.of(context).size.width * 0.48,
-                ),
-              ],
+            // Rounds dropdown
+            GenericDropdown<int>(
+              listOfInstances: _rounds,
+              onSelected: _roundOnSelected,
+              width: MediaQuery.of(context).size.width * 0.48,
             ),
             const SizedBox(height: 16),
             Expanded(
@@ -260,7 +245,7 @@ class _TournamentViewerState extends State<TournamentViewer> {
                       headingTrailing: LabeledCheckbox(
                         label: 'Unplayed only',
                         onChanged: _checkboxChanged,
-                        value: _isChecked,
+                        value: _isUnplayedOnlyChecked,
                       ),
                       child: GenericListView<Matchup>(
                         hasIconButton: false,
@@ -273,12 +258,16 @@ class _TournamentViewerState extends State<TournamentViewer> {
                   const SizedBox(width: 24),
                   // Matchup info
                   Flexible(
-                    child: Visibility(
-                      visible: _selectedMatchups.isNotEmpty,
-                      child: CustomCard(
-                        headingText: 'Scores',
-                        child: MatchupInfo(
-                          scoreOnPressed: _scoreOnPressed,
+                    child: CustomCard(
+                      headingText: 'Scores',
+                      child: Visibility(
+                        visible: _selectedMatchups.isNotEmpty,
+                        replacement: const Center(
+                          child: Text('No matchup selected to score'),
+                        ),
+                        child: _MatchupInfo(
+                          formKey: _formKey,
+                          scoreOnPressed: _scoreMatchup,
                           teamOne: _teamOne,
                           teamTwo: _teamTwo,
                         ),
@@ -295,23 +284,25 @@ class _TournamentViewerState extends State<TournamentViewer> {
   }
 }
 
-class MatchupInfo extends StatelessWidget {
+class _MatchupInfo extends StatelessWidget {
+  final GlobalKey<FormState> formKey;
   final VoidCallback scoreOnPressed;
-  final TeamData teamOne;
-  final TeamData teamTwo;
+  final _TeamData teamOne;
+  final _TeamData teamTwo;
 
-  const MatchupInfo({
-    super.key,
+  const _MatchupInfo({
+    required this.formKey,
     required this.scoreOnPressed,
     required this.teamOne,
     required this.teamTwo,
   });
 
-  String? _validateTeamOneScore(String? value) {
-    return null;
-  }
-
-  String? _validateTeamTwoScore(String? value) {
+  String? _validateScore(String? value) {
+    if (value != null) {
+      if (value.isEmpty) return 'Please enter a score';
+      final score = double.tryParse(value);
+      if (score == null) return 'Please enter a valid score';
+    }
     return null;
   }
 
@@ -323,35 +314,38 @@ class MatchupInfo extends StatelessWidget {
         teamTwo.name == 'Not yet set' ? 'Not yet set' : '${teamTwo.name} score';
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
-      child: Column(
-        children: [
-          SizedBox(
-            width: double.maxFinite,
-            child: CustomTextFormField(
-              controller: teamOne.controller,
-              fillColor: Theme.of(context).colorScheme.surfaceContainerLowest,
-              label: teamOneLabel,
-              validator: _validateTeamOneScore,
+      child: Form(
+        key: formKey,
+        child: Column(
+          children: [
+            SizedBox(
+              width: double.maxFinite,
+              child: CustomTextFormField(
+                controller: teamOne.controller,
+                fillColor: Theme.of(context).colorScheme.surfaceContainerLowest,
+                label: teamOneLabel,
+                validator: _validateScore,
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.maxFinite,
-            child: CustomTextFormField(
-              controller: teamTwo.controller,
-              fillColor: Theme.of(context).colorScheme.surfaceContainerLowest,
-              label: teamTwoLabel,
-              validator: _validateTeamTwoScore,
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.maxFinite,
+              child: CustomTextFormField(
+                controller: teamTwo.controller,
+                fillColor: Theme.of(context).colorScheme.surfaceContainerLowest,
+                label: teamTwoLabel,
+                validator: _validateScore,
+              ),
             ),
-          ),
-          const SizedBox(height: 24),
-          CustomButton(
-            buttonType: ButtonType.filled,
-            onPressed: scoreOnPressed,
-            text: 'Score',
-            width: MediaQuery.of(context).size.width * 0.3,
-          ),
-        ],
+            const SizedBox(height: 24),
+            CustomButton(
+              buttonType: ButtonType.filled,
+              onPressed: scoreOnPressed,
+              text: 'Score',
+              width: MediaQuery.of(context).size.width * 0.3,
+            ),
+          ],
+        ),
       ),
     );
   }

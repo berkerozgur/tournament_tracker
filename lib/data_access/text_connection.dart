@@ -1,4 +1,5 @@
 // ignore_for_file: constant_identifier_names
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:decimal/decimal.dart';
@@ -11,6 +12,7 @@ import '../models/person.dart';
 import '../models/prize.dart';
 import '../models/team.dart';
 import '../models/tournament.dart';
+import '../tournament_logic.dart';
 
 import 'data_connection.dart';
 
@@ -132,6 +134,7 @@ class TextConnection extends DataConnection {
     await _writeRoundsToFiles(tournament);
     tournaments.add(tournament);
     await _writeToTournamentsFile(tournaments);
+    TournamentLogic.updateTournamentResults(tournament);
 
     return tournament;
   }
@@ -212,7 +215,8 @@ class TextConnection extends DataConnection {
         }
       }
     }
-    return await _convertToMatchupEntries(matchingEntries);
+    final convertedEntries = await _convertToMatchupEntries(matchingEntries);
+    return convertedEntries;
   }
 
   Future<Team?> _getTeamById(int? id) async {
@@ -257,7 +261,7 @@ class TextConnection extends DataConnection {
     for (var matchup in matchups) {
       final entryIds = _convertIdsToString(
         matchup.entries,
-        (matchup) => matchup.id,
+        (entry) => entry.id,
       );
       var winnerId = 'null';
       if (matchup.winner != null) {
@@ -514,7 +518,7 @@ class TextConnection extends DataConnection {
     for (var matchup in matchups) {
       final entryIds = _convertIdsToString(
         matchup.entries,
-        (matchup) => matchup.id,
+        (entry) => entry.id,
       );
       var winnerId = 'null';
       if (matchup.winner != null) {
@@ -551,6 +555,7 @@ class TextConnection extends DataConnection {
       }
       lines.add('${entry.id},$competingId,${entry.score},$parentId');
     }
+
     await _writeLines(_MATCHUP_ENTRIES_FILE, lines);
   }
 

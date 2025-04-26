@@ -11,6 +11,7 @@ import '../widgets/custom_card.dart';
 import '../widgets/custom_text_form_field.dart';
 import '../widgets/generic_dropdown.dart';
 import '../widgets/generic_list_view.dart';
+
 import 'create_prize.dart';
 import 'create_team.dart';
 
@@ -224,23 +225,18 @@ class _CreateTournamentState extends State<CreateTournament> {
                   const SizedBox(width: 24),
                   // Team selection row
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
                       children: [
-                        Row(
-                          children: [
-                            GenericDropdown<Team>(
-                              onSelected: _selectTeam,
-                              listOfInstances: _availableTeams,
-                            ),
-                            const SizedBox(width: 16),
-                            CustomButton(
-                              buttonType: ButtonType.filled,
-                              enabled: _availableTeams.isNotEmpty,
-                              onPressed: _addTeam,
-                              text: 'Add team',
-                            ),
-                          ],
+                        GenericDropdown<Team>(
+                          onSelected: _selectTeam,
+                          listOfInstances: _availableTeams,
+                        ),
+                        const SizedBox(width: 16),
+                        CustomButton(
+                          buttonType: ButtonType.filled,
+                          enabled: _availableTeams.isNotEmpty,
+                          onPressed: _addTeam,
+                          text: 'Add team',
                         ),
                       ],
                     ),
@@ -251,55 +247,36 @@ class _CreateTournamentState extends State<CreateTournament> {
               // Teams and prizes section
               Expanded(
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Selected prizes section
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 8),
-                          Flexible(
-                            child: CustomCard(
-                              headingText: 'Prizes',
-                              headingTrailing: CustomButton(
-                                buttonType: ButtonType.text,
-                                onPressed: _showCreatePrizeDialog,
-                                text: 'Create prize',
-                              ),
-                              child: GenericListView<Prize>(
-                                iconButtonOnPressed: _removePrize,
-                                models: _selectedPrizes,
-                              ),
-                            ),
-                          ),
-                        ],
+                      child: CustomCard(
+                        headingText: 'Prizes',
+                        headingTrailing: CustomButton(
+                          buttonType: ButtonType.text,
+                          onPressed: _showCreatePrizeDialog,
+                          text: 'Create prize',
+                        ),
+                        child: GenericListView<Prize>(
+                          iconButtonOnPressed: _removePrize,
+                          models: _selectedPrizes,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 16),
                     // Selected teams section
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 8),
-                          Flexible(
-                            child: CustomCard(
-                              headingText: 'Selected teams',
-                              headingTrailing: CustomButton(
-                                buttonType: ButtonType.text,
-                                onPressed: _showCreateTeamDialog,
-                                text: 'Create new team',
-                              ),
-                              child: Expanded(
-                                child: GenericListView<Team>(
-                                  iconButtonOnPressed: _removeTeam,
-                                  models: _selectedTeams,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+                      child: CustomCard(
+                        headingText: 'Selected teams',
+                        headingTrailing: CustomButton(
+                          buttonType: ButtonType.text,
+                          onPressed: _showCreateTeamDialog,
+                          text: 'Create new team',
+                        ),
+                        child: GenericListView<Team>(
+                          iconButtonOnPressed: _removeTeam,
+                          models: _selectedTeams,
+                        ),
                       ),
                     ),
                   ],

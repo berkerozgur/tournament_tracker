@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'global_config.dart';
 import 'models/matchup.dart';
 import 'models/matchup_entry.dart';
 import 'models/team.dart';
@@ -15,6 +16,7 @@ class TournamentLogic {
   // Create first round of matchups
   // Create every round after that
   //   if 8 matchups -> 4 -> 2 -> 1
+
   static void createRounds(Tournament tournament) {
     final randomizedTeams = _randomizeTeams(tournament.enteredTeams);
     final rounds = _findNumberOfRounds(randomizedTeams.length);
@@ -22,6 +24,48 @@ class TournamentLogic {
     final firstRound = _createFirstRound(byes, randomizedTeams);
     tournament.rounds.add(firstRound);
     _createOtherRounds(tournament, rounds);
+  }
+
+  static void updateTournamentResults(Tournament tournament) async {
+    List<Matchup> matchupsToScore = [];
+
+    for (var round in tournament.rounds) {
+      for (var matchup in round) {
+        bool hasNoWinner = matchup.winner == null;
+        bool hasScoredEntry = matchup.entries.any((entry) => entry.score != 0);
+        bool isSingleEntryMatchup = matchup.entries.length == 1;
+        if (hasNoWinner && (hasScoredEntry || isSingleEntryMatchup)) {
+          matchupsToScore.add(matchup);
+        }
+      }
+    }
+
+    _markWinnersInMatchups(matchupsToScore);
+    await _advanceWinners(matchupsToScore, tournament);
+    for (var matchup in matchupsToScore) {
+      await GlobalConfig.connection.updateMatchup(matchup);
+    }
+  }
+
+  static Future<void> _advanceWinners(
+    List<Matchup> matchups,
+    Tournament tournament,
+  ) async {
+    // TODO: Variable names in these n^4 loops can be better
+    for (var m in matchups) {
+      for (var round in tournament.rounds) {
+        for (var matchup in round) {
+          for (var entry in matchup.entries) {
+            if (entry.parent != null) {
+              if (entry.parent!.id == m.id) {
+                entry.teamCompeting = m.winner;
+                await GlobalConfig.connection.updateMatchup(matchup);
+              }
+            }
+          }
+        }
+      }
+    }
   }
 
   static List<Matchup> _createFirstRound(int byes, List<Team> teams) {
@@ -84,6 +128,32 @@ class TournamentLogic {
     }
 
     return rounds;
+  }
+
+  static void _markWinnersInMatchups(List<Matchup> matchups) {
+    // TODO: Handle low score or high score wins.
+    // In order to do that I need to change a lot in model and UI, I will skip
+    // this for unknown future date.
+
+    // High score wins
+    for (var matchup in matchups) {
+      final entryOne = matchup.entries[0];
+      // Checks for the bye entry
+      if (matchup.entries.length == 1) {
+        matchup.winner = entryOne.teamCompeting;
+        continue;
+      }
+      final entryTwo = matchup.entries[1];
+      if (entryOne.score != null && entryTwo.score != null) {
+        if (entryOne.score! > entryTwo.score!) {
+          matchup.winner = entryOne.teamCompeting;
+        } else if (entryTwo.score! > entryOne.score!) {
+          matchup.winner = entryTwo.teamCompeting;
+        } else {
+          throw Exception('Single-elimination does not handle ties');
+        }
+      }
+    }
   }
 
   static List<Team> _randomizeTeams(List<Team> teams) => teams..shuffle();

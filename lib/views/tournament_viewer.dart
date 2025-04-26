@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../global_config.dart';
 import '../models/matchup.dart';
 import '../models/tournament.dart';
+import '../tournament_logic.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_card.dart';
 import '../widgets/custom_text_form_field.dart';
@@ -180,17 +180,9 @@ class _TournamentViewerState extends State<TournamentViewer> {
       }
     }
 
-    // High score wins
-    if (teamOneScore > teamTwoScore) {
-      // Team one wins
-      setState(() {
-        _selectedMatchup!.winner = entries[0].teamCompeting;
-      });
-    } else if (teamTwoScore > teamOneScore) {
-      setState(() {
-        _selectedMatchup!.winner = entries[1].teamCompeting;
-      });
-    } else {
+    try {
+      TournamentLogic.updateTournamentResults(widget.tournament);
+    } on Exception catch (_) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Single-elimination does not handle ties'),
@@ -198,22 +190,42 @@ class _TournamentViewerState extends State<TournamentViewer> {
       );
     }
 
-    for (var round in widget.tournament.rounds) {
-      for (var matchup in round) {
-        for (var entry in matchup.entries) {
-          if (entry.parent != null) {
-            if (entry.parent!.id == _selectedMatchup!.id) {
-              entry.teamCompeting = _selectedMatchup!.winner;
-              GlobalConfig.connection.updateMatchup(matchup);
-            }
-          }
-        }
-      }
-    }
+    // I move this to tournament logic file but I have concerns about updating
+    // matchup on state so I'll leave this for reference
+    // // High score wins
+    // if (teamOneScore > teamTwoScore) {
+    //   // Team one wins
+    //   setState(() {
+    //     _selectedMatchup!.winner = entries[0].teamCompeting;
+    //   });
+    // } else if (teamTwoScore > teamOneScore) {
+    //   setState(() {
+    //     _selectedMatchup!.winner = entries[1].teamCompeting;
+    //   });
+    // } else {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(
+    //       content: Text('Single-elimination does not handle ties'),
+    //     ),
+    //   );
+    // }
 
-    _loadMatchups(_selectedRound);
+    // for (var round in widget.tournament.rounds) {
+    //   for (var matchup in round) {
+    //     for (var entry in matchup.entries) {
+    //       if (entry.parent != null) {
+    //         if (entry.parent!.id == _selectedMatchup!.id) {
+    //           entry.teamCompeting = _selectedMatchup!.winner;
+    //           GlobalConfig.connection.updateMatchup(matchup);
+    //         }
+    //       }
+    //     }
+    //   }
+    // }
 
-    await GlobalConfig.connection.updateMatchup(_selectedMatchup!);
+    // _loadMatchups(_selectedRound);
+
+    // await GlobalConfig.connection.updateMatchup(_selectedMatchup!);
   }
 
   @override

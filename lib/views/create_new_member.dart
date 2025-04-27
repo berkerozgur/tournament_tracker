@@ -89,60 +89,48 @@ class _CreateNewMemberState extends State<CreateNewMember> {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Column(
-        children: [
-          Expanded(
-            child: Form(
-              key: _formKey,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    CustomTextFormField(
-                      controller: _firstNameController,
-                      fillColor:
-                          Theme.of(context).colorScheme.surfaceContainerLowest,
-                      label: 'First name',
-                      validator: _validateFirstName,
-                    ),
-                    const SizedBox(height: 16),
-                    CustomTextFormField(
-                      controller: _lastNameController,
-                      fillColor:
-                          Theme.of(context).colorScheme.surfaceContainerLowest,
-                      label: 'Last name',
-                      validator: _validateLastName,
-                    ),
-                    const SizedBox(height: 16),
-                    CustomTextFormField(
-                      controller: _phoneController,
-                      fillColor:
-                          Theme.of(context).colorScheme.surfaceContainerLowest,
-                      label: 'Phone number',
-                      validator: _validatePhoneNumber,
-                    ),
-                    const SizedBox(height: 16),
-                    CustomTextFormField(
-                      controller: _emailController,
-                      fillColor:
-                          Theme.of(context).colorScheme.surfaceContainerLowest,
-                      label: 'Email address',
-                      validator: _validateEmailAddress,
-                    ),
-                    const Spacer(),
-                    CustomButton(
-                      buttonType: ButtonType.filled,
-                      onPressed: _createNewMember,
-                      text: 'Create new member',
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                ),
-              ),
+    return Form(
+      key: _formKey,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            CustomTextFormField(
+              controller: _firstNameController,
+              fillColor: Theme.of(context).colorScheme.surfaceContainerLowest,
+              label: 'First name',
+              validator: _validateFirstName,
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            CustomTextFormField(
+              controller: _lastNameController,
+              fillColor: Theme.of(context).colorScheme.surfaceContainerLowest,
+              label: 'Last name',
+              validator: _validateLastName,
+            ),
+            const SizedBox(height: 16),
+            CustomTextFormField(
+              controller: _phoneController,
+              fillColor: Theme.of(context).colorScheme.surfaceContainerLowest,
+              label: 'Phone number',
+              validator: _validatePhoneNumber,
+            ),
+            const SizedBox(height: 16),
+            CustomTextFormField(
+              controller: _emailController,
+              fillColor: Theme.of(context).colorScheme.surfaceContainerLowest,
+              label: 'Email address',
+              validator: _validateEmailAddress,
+            ),
+            const Spacer(),
+            CustomButton(
+              buttonType: ButtonType.filled,
+              onPressed: _createNewMember,
+              text: 'Create new member',
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }

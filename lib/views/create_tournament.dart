@@ -168,12 +168,11 @@ class _CreateTournamentState extends State<CreateTournament> {
 
   String? _validateEntryFee(String? value) {
     if (value != null) {
-      if (value.isEmpty) return null;
       final fee = Decimal.tryParse(value);
-      if (fee != null && fee < Decimal.zero) {
+      if (fee == null) return 'Please enter a valid number';
+      if (fee < Decimal.zero) {
         return 'Please enter a positive number or leave it empty';
       }
-      return 'Please enter a number';
     }
     return null;
   }
@@ -192,106 +191,103 @@ class _CreateTournamentState extends State<CreateTournament> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text('Create Tournament'),
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Tournament name and entry fee form
-                  Expanded(
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          CustomTextFormField(
-                            controller: _tournamentNameController,
-                            label: 'Tournament name',
-                            validator: _validateTournamentName,
-                          ),
-                          const SizedBox(height: 16),
-                          CustomTextFormField(
-                            controller: _entryFeeController,
-                            label: 'Entry fee',
-                            validator: _validateEntryFee,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 24),
-                  // Team selection row
-                  Expanded(
-                    child: Row(
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Tournament name and entry fee form
+                Expanded(
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
                       children: [
-                        GenericDropdown<Team>(
-                          onSelected: _selectTeam,
-                          listOfInstances: _availableTeams,
+                        CustomTextFormField(
+                          controller: _tournamentNameController,
+                          label: 'Tournament name',
+                          validator: _validateTournamentName,
                         ),
-                        const SizedBox(width: 16),
-                        CustomButton(
-                          buttonType: ButtonType.filled,
-                          enabled: _availableTeams.isNotEmpty,
-                          onPressed: _addTeam,
-                          text: 'Add team',
+                        const SizedBox(height: 16),
+                        CustomTextFormField(
+                          controller: _entryFeeController,
+                          label: 'Entry fee',
+                          validator: _validateEntryFee,
                         ),
                       ],
                     ),
                   ),
+                ),
+                const SizedBox(width: 24),
+                // Team selection row
+                Expanded(
+                  child: Row(
+                    children: [
+                      GenericDropdown<Team>(
+                        onSelected: _selectTeam,
+                        listOfInstances: _availableTeams,
+                      ),
+                      const SizedBox(width: 16),
+                      CustomButton(
+                        buttonType: ButtonType.filled,
+                        enabled: _availableTeams.isNotEmpty,
+                        onPressed: _addTeam,
+                        text: 'Add team',
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Teams and prizes section
+            Expanded(
+              child: Row(
+                children: [
+                  // Selected prizes section
+                  Expanded(
+                    child: CustomCard(
+                      headingText: 'Prizes',
+                      headingTrailing: CustomButton(
+                        buttonType: ButtonType.text,
+                        onPressed: _showCreatePrizeDialog,
+                        text: 'Create prize',
+                      ),
+                      child: GenericListView<Prize>(
+                        iconButtonOnPressed: _removePrize,
+                        models: _selectedPrizes,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  // Selected teams section
+                  Expanded(
+                    child: CustomCard(
+                      headingText: 'Selected teams',
+                      headingTrailing: CustomButton(
+                        buttonType: ButtonType.text,
+                        onPressed: _showCreateTeamDialog,
+                        text: 'Create new team',
+                      ),
+                      child: GenericListView<Team>(
+                        iconButtonOnPressed: _removeTeam,
+                        models: _selectedTeams,
+                      ),
+                    ),
+                  ),
                 ],
               ),
-              const SizedBox(height: 16),
-              // Teams and prizes section
-              Expanded(
-                child: Row(
-                  children: [
-                    // Selected prizes section
-                    Expanded(
-                      child: CustomCard(
-                        headingText: 'Prizes',
-                        headingTrailing: CustomButton(
-                          buttonType: ButtonType.text,
-                          onPressed: _showCreatePrizeDialog,
-                          text: 'Create prize',
-                        ),
-                        child: GenericListView<Prize>(
-                          iconButtonOnPressed: _removePrize,
-                          models: _selectedPrizes,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    // Selected teams section
-                    Expanded(
-                      child: CustomCard(
-                        headingText: 'Selected teams',
-                        headingTrailing: CustomButton(
-                          buttonType: ButtonType.text,
-                          onPressed: _showCreateTeamDialog,
-                          text: 'Create new team',
-                        ),
-                        child: GenericListView<Team>(
-                          iconButtonOnPressed: _removeTeam,
-                          models: _selectedTeams,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              // Create tournament button
-              CustomButton(
-                buttonType: ButtonType.filled,
-                onPressed: _createTournamentOnPressed,
-                text: 'Create tournament',
-                width: MediaQuery.of(context).size.width * 0.3,
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 24),
+            // Create tournament button
+            CustomButton(
+              buttonType: ButtonType.filled,
+              onPressed: _createTournamentOnPressed,
+              text: 'Create tournament',
+              width: MediaQuery.of(context).size.width * 0.3,
+            ),
+          ],
         ),
       ),
     );

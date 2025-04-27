@@ -181,15 +181,17 @@ class _TournamentViewerState extends State<TournamentViewer> {
     }
 
     try {
-      TournamentLogic.updateTournamentResults(widget.tournament);
-    } on Exception catch (_) {
+      await TournamentLogic.updateTournamentResults(widget.tournament);
+    } on Exception catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Single-elimination does not handle ties'),
+        SnackBar(
+          content: Text(e.toString()),
         ),
       );
     }
 
+    // TODO: Remove this when app works fine
     // I move this to tournament logic file but I have concerns about updating
     // matchup on state so I'll leave this for reference
     // // High score wins
@@ -254,7 +256,7 @@ class _TournamentViewerState extends State<TournamentViewer> {
                   Flexible(
                     child: CustomCard(
                       headingText: 'Matchups',
-                      headingTrailing: LabeledCheckbox(
+                      headingTrailing: _LabeledCheckbox(
                         label: 'Unplayed only',
                         onChanged: _checkboxChanged,
                         value: _isUnplayedOnlyChecked,
@@ -313,7 +315,7 @@ class _MatchupInfo extends StatelessWidget {
     if (value != null) {
       if (value.isEmpty) return 'Please enter a score';
       final score = double.tryParse(value);
-      if (score == null) return 'Please enter a valid score';
+      if (score == null) return 'Please enter a valid number';
     }
     return null;
   }
@@ -363,9 +365,8 @@ class _MatchupInfo extends StatelessWidget {
   }
 }
 
-class LabeledCheckbox extends StatelessWidget {
-  const LabeledCheckbox({
-    super.key,
+class _LabeledCheckbox extends StatelessWidget {
+  const _LabeledCheckbox({
     required this.label,
     required this.onChanged,
     required this.value,

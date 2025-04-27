@@ -26,14 +26,21 @@ class TournamentLogic {
     _createOtherRounds(tournament, rounds);
   }
 
-  static void updateTournamentResults(Tournament tournament) async {
+  static Future<void> updateTournamentResults(Tournament tournament) async {
     List<Matchup> matchupsToScore = [];
 
     for (var round in tournament.rounds) {
       for (var matchup in round) {
+        // TODO: with this we can't score more than one
         bool hasNoWinner = matchup.winner == null;
         bool hasScoredEntry = matchup.entries.any((entry) => entry.score != 0);
         bool isSingleEntryMatchup = matchup.entries.length == 1;
+        bool bothHaveZeroScore = matchup.entries.every(
+          (entry) => entry.score == 0,
+        );
+        if (bothHaveZeroScore) {
+          throw Exception('Single-elimination does not handle ties');
+        }
         if (hasNoWinner && (hasScoredEntry || isSingleEntryMatchup)) {
           matchupsToScore.add(matchup);
         }

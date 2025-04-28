@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'app_routes.dart';
@@ -12,6 +13,7 @@ import 'views/tournament_dashboard.dart';
 import 'views/tournament_viewer.dart';
 
 void main() async {
+  await dotenv.load();
   WidgetsFlutterBinding.ensureInitialized();
 
   // create text data directory

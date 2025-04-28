@@ -1,6 +1,6 @@
 name: tournament_tracker
 description: "A new Flutter project."
-publish_to: 'none'
+publish_to: "none"
 version: 0.1.0
 
 environment:
@@ -10,6 +10,8 @@ dependencies:
   decimal: ^3.1.0
   flutter:
     sdk: flutter
+  flutter_dotenv: ^5.2.1
+  mailer: ^6.4.1
   path: ^1.9.0
   path_provider: ^2.1.5
   window_manager: ^0.4.3
@@ -21,3 +23,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - .env

@@ -111,6 +111,8 @@ class _CreateTournamentState extends State<CreateTournament> {
       final createdTournament =
           await GlobalConfig.connection.createTournament(tournament);
 
+      TournamentLogic.alertUsersToNewRound(tournament);
+
       if (!mounted) return;
       Navigator.pop(context, createdTournament);
     }

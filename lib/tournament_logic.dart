@@ -1,8 +1,10 @@
 import 'dart:math' as math;
 
+import 'email_logic.dart';
 import 'global_config.dart';
 import 'models/matchup.dart';
 import 'models/matchup_entry.dart';
+import 'models/person.dart';
 import 'models/team.dart';
 import 'models/tournament.dart';
 
@@ -28,6 +30,7 @@ class TournamentLogic {
 
   static Future<void> updateTournamentResults(Tournament tournament) async {
     List<Matchup> matchupsToScore = [];
+    final startingRound = _getCurrentRound(tournament);
 
     for (var round in tournament.rounds) {
       for (var matchup in round) {
@@ -52,6 +55,11 @@ class TournamentLogic {
     for (var matchup in matchupsToScore) {
       await GlobalConfig.connection.updateMatchup(matchup);
     }
+
+    final endingRound = _getCurrentRound(tournament);
+    if (endingRound > startingRound) {
+      alertUsersToNewRound(tournament);
+    }
   }
 
   static Future<void> _advanceWinners(
@@ -69,6 +77,58 @@ class TournamentLogic {
                 await GlobalConfig.connection.updateMatchup(matchup);
               }
             }
+          }
+        }
+      }
+    }
+  }
+
+  static void _alertMemberToNewRound(
+    MatchupEntry? competitor,
+    Person member,
+    String teamName,
+  ) {
+    // TODO: Validate email
+    final body = StringBuffer();
+    var subject = '';
+
+    if (competitor != null) {
+      subject = 'You have a new matchup with ${competitor.teamCompeting!.name}';
+      body.writeln('<h1>You have a new matchup</h1>');
+      body.write('<strong>Competitor: </strong>');
+      body.write(competitor.teamCompeting!.name);
+      body.writeln();
+      body.writeln();
+      body.writeln('Have a great time!');
+      body.writeln('~Tournament Tracker');
+    } else {
+      subject = 'You have a bye this round';
+      body.writeln('Enjoy your round off');
+      body.writeln('~Tournament Tracker');
+    }
+
+    EmailLogic.sendEmail(body.toString(), member.emailAddress, subject);
+  }
+
+  static void alertUsersToNewRound(Tournament tournament) {
+    final currentRound = _getCurrentRound(tournament);
+    final round = tournament.rounds
+        .where((matchup) => matchup.first.round == currentRound)
+        .first;
+
+    for (var matchup in round) {
+      for (var entry in matchup.entries) {
+        if (entry.teamCompeting != null) {
+          final competitor = matchup.entries
+              .where((matchupEntry) =>
+                  matchupEntry.teamCompeting != entry.teamCompeting)
+              .firstOrNull;
+          for (var member in entry.teamCompeting!.members) {
+            _alertMemberToNewRound(
+              competitor,
+              member,
+              entry.teamCompeting!.name,
+            );
           }
         }
       }
@@ -135,6 +195,16 @@ class TournamentLogic {
     }
 
     return rounds;
+  }
+
+  static int _getCurrentRound(Tournament tournament) {
+    var currRound = 1;
+    for (var round in tournament.rounds) {
+      if (round.every((matchup) => matchup.winner != null)) {
+        currRound++;
+      }
+    }
+    return currRound;
   }
 
   static void _markWinnersInMatchups(List<Matchup> matchups) {

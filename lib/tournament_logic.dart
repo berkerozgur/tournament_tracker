@@ -89,25 +89,30 @@ class TournamentLogic {
     String teamName,
   ) {
     // TODO: Validate email
-    final body = StringBuffer();
-    var subject = '';
+    final subject = competitor != null
+        ? 'You have a new matchup with ${competitor.teamCompeting!.name}'
+        : 'You have a bye this round';
+
+    final htmlBody = StringBuffer();
 
     if (competitor != null) {
-      subject = 'You have a new matchup with ${competitor.teamCompeting!.name}';
-      body.writeln('<h1>You have a new matchup</h1>');
-      body.write('<strong>Competitor: </strong>');
-      body.write(competitor.teamCompeting!.name);
-      body.writeln();
-      body.writeln();
-      body.writeln('Have a great time!');
-      body.writeln('~Tournament Tracker');
+      htmlBody.write('''
+        <h1>You have a new matchup</h1>
+        <p><strong>Competitor:</strong> ${competitor.teamCompeting!.name}</p>
+        <p>Have a great time!<br>~Tournament Tracker</p>
+      ''');
     } else {
-      subject = 'You have a bye this round';
-      body.writeln('Enjoy your round off');
-      body.writeln('~Tournament Tracker');
+      htmlBody.write('''
+        <p>Enjoy your round off</p>
+        <p>~Tournament Tracker</p>
+      ''');
     }
 
-    EmailLogic.sendEmail(body.toString(), member.emailAddress, subject);
+    EmailLogic.sendEmail(
+      htmlBody.toString().trim(),
+      member.emailAddress,
+      subject,
+    );
   }
 
   static void alertUsersToNewRound(Tournament tournament) {

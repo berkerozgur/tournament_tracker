@@ -66,6 +66,14 @@ class TextConnection extends DataConnection {
     await sink.close();
   }
 
+  @override
+  Future<void> completeTournament(Tournament tournament) async {
+    final tournaments = await getAllTournaments();
+    tournaments.remove(tournament);
+    await _writeToTournamentsFile(tournaments);
+    // TournamentLogic.updateTournamentResults(tournament);
+  }
+
   // CREATE
   @override
   Future<Person> createPerson(Person person) async {

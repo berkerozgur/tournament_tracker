@@ -21,6 +21,8 @@ class Tournament {
     required this.rounds,
   });
 
+  void Function()? onTournamentComplete;
+
   @override
   String toString() => 'Tournament(id: $id, enteredTeams: $enteredTeams, '
       'entryFee: $entryFee, name: $name, prizes: $prizes, rounds: $rounds)';

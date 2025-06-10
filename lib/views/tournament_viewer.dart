@@ -49,6 +49,11 @@ class _TournamentViewerState extends State<TournamentViewer> {
       name: 'Not yet set',
       controller: TextEditingController(),
     );
+
+    widget.tournament.onTournamentComplete = () {
+      Navigator.pop(context);
+    };
+
     _loadRounds();
   }
 
@@ -154,7 +159,7 @@ class _TournamentViewerState extends State<TournamentViewer> {
     _loadMatchups(selectedRound);
   }
 
-  void _scoreMatchup() async {
+  Future<void> _scoreMatchup() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final entries = _selectedMatchup!.entries;
@@ -190,44 +195,6 @@ class _TournamentViewerState extends State<TournamentViewer> {
         ),
       );
     }
-
-    // TODO: Remove this when app works fine
-    // I move this to tournament logic file but I have concerns about updating
-    // matchup on state so I'll leave this for reference
-    // // High score wins
-    // if (teamOneScore > teamTwoScore) {
-    //   // Team one wins
-    //   setState(() {
-    //     _selectedMatchup!.winner = entries[0].teamCompeting;
-    //   });
-    // } else if (teamTwoScore > teamOneScore) {
-    //   setState(() {
-    //     _selectedMatchup!.winner = entries[1].teamCompeting;
-    //   });
-    // } else {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     const SnackBar(
-    //       content: Text('Single-elimination does not handle ties'),
-    //     ),
-    //   );
-    // }
-
-    // for (var round in widget.tournament.rounds) {
-    //   for (var matchup in round) {
-    //     for (var entry in matchup.entries) {
-    //       if (entry.parent != null) {
-    //         if (entry.parent!.id == _selectedMatchup!.id) {
-    //           entry.teamCompeting = _selectedMatchup!.winner;
-    //           GlobalConfig.connection.updateMatchup(matchup);
-    //         }
-    //       }
-    //     }
-    //   }
-    // }
-
-    // _loadMatchups(_selectedRound);
-
-    // await GlobalConfig.connection.updateMatchup(_selectedMatchup!);
   }
 
   @override

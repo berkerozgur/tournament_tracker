@@ -1,3 +1,5 @@
+import 'dart:developer' as dev show log;
+
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server.dart';
@@ -9,11 +11,12 @@ import 'package:mailer/smtp_server.dart';
 class EmailLogic {
   EmailLogic._();
 
-  static void sendEmail(
-    String body,
-    String recipient,
-    String subject,
-  ) async {
+  static Future<void> sendEmail({
+    required String subject,
+    required String body,
+    String? to,
+    List<String>? bcc,
+  }) async {
     final username = dotenv.get('EMAIL');
     // final password = dotenv.get('PASSWORD');
 
@@ -28,21 +31,28 @@ class EmailLogic {
 
     final message = Message()
       ..from = Address(username, 'Tournament Tracker')
-      ..recipients.add(recipient)
       ..subject = subject
       ..html = body;
 
+    if (to != null && to.isNotEmpty) {
+      message.recipients.add(to);
+    } else if (bcc != null && bcc.isNotEmpty) {
+      message.bccRecipients.addAll(bcc);
+    } else {
+      throw ArgumentError('At least one of "to" or "bcc" must be provided');
+    }
+
     try {
       final sendReport = await send(message, smtpServer);
-      print('Message sent: $sendReport');
+      dev.log('Message sent: $sendReport');
     } on MailerException catch (e) {
-      print('Message not sent. Exception: $e');
+      dev.log('Message not sent. Exception: $e');
       for (var p in e.problems) {
-        print('Problem: code=${p.code}, message=${p.msg}');
+        dev.log('Problem: code=${p.code}, message=${p.msg}');
       }
     } catch (e, stack) {
-      print('Unexpected error: $e');
-      print(stack);
+      dev.log('Unexpected error: $e');
+      dev.log(stack.toString());
     }
   }
 }

@@ -13,6 +13,8 @@ abstract class DataConnection {
 
   Future<Tournament> createTournament(Tournament tournament);
 
+  Future<void> completeTournament(Tournament tournament);
+
   Future<List<Person>> getAllPeople();
 
   Future<List<Prize>> getAllPrizes();
